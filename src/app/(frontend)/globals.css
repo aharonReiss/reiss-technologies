@@ -1,0 +1,929 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--font-heebo), system-ui, sans-serif;
+  --font-display: var(--font-rubik), var(--font-heebo), system-ui, sans-serif;
+  --font-signature: var(--font-signature-script), cursive;
+
+  /*
+   * REISS DIGITAL palette: three colours define the whole identity.
+   * Every other token below is DERIVED from them (opacity / mix), never a new hue.
+   */
+  --color-ink: #0d1020; /* Deep Navy: dark backgrounds, dark text on light */
+  --color-muted: #f8f9ff; /* Cool White: light backgrounds, text on dark */
+  --color-brand: #4355f5; /* Electric Blue: buttons, highlighted words, interaction */
+
+  --color-heading: var(--color-ink);
+  --color-body: color-mix(in srgb, var(--color-ink) 72%, var(--color-muted)); /* secondary text on light */
+  --color-line: color-mix(in srgb, var(--color-ink) 12%, var(--color-muted)); /* hairlines on light */
+  --color-ink-soft: color-mix(in srgb, var(--color-muted) 6%, var(--color-ink)); /* raised surface on navy */
+  --color-brand-dark: color-mix(in srgb, var(--color-brand) 85%, var(--color-ink)); /* hover */
+  --color-brand-soft: color-mix(in srgb, var(--color-brand) 10%, var(--color-muted)); /* tint on light */
+
+  --radius-card: 1.25rem;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(50%);
+    }
+  }
+
+  --animate-drift: drift 14s ease-in-out infinite alternate;
+  --animate-drift-slow: drift 22s ease-in-out infinite alternate-reverse;
+  --animate-glow: glow 7s ease-in-out infinite;
+
+  @keyframes drift {
+    from {
+      transform: translate3d(0, 0, 0) rotate(24deg);
+    }
+    to {
+      transform: translate3d(-6%, 3%, 0) rotate(27deg);
+    }
+  }
+  @keyframes glow {
+    0%,
+    100% {
+      opacity: 0.75;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-muted font-sans text-body;
+  }
+
+  /* Side-entering reveals must never cause horizontal scroll. Set on <main>, not
+     <body> (body overflow is handed to the viewport); clip keeps sticky working. */
+  main {
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-heading;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
+
+@utility container-site {
+  @apply mx-auto w-full max-w-7xl px-5 md:px-8;
+}
+
+@utility btn {
+  @apply relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 text-[15px] font-semibold transition duration-200;
+
+  /* Light sweep across the button on hover */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.35) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+@utility btn-primary {
+  @apply btn bg-brand text-white shadow-[0_8px_24px_-8px_var(--color-brand)] hover:-translate-y-0.5 hover:bg-brand-dark;
+}
+
+@utility btn-secondary {
+  @apply btn border border-current/20 hover:border-current/60;
+}
+
+@utility btn-accent {
+  /* Primary CTA on dark backgrounds: Electric Blue with a soft lavender glow */
+  @apply btn bg-brand text-white shadow-[0_10px_30px_-10px_var(--color-brand)] hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_14px_36px_-8px_var(--color-brand)];
+}
+
+/* Rich text output from the CMS */
+@utility prose-site {
+  @apply text-[17px] leading-8;
+
+  & h2 {
+    @apply mt-12 mb-4 text-3xl font-bold;
+  }
+  & h3 {
+    @apply mt-10 mb-3 text-2xl font-bold;
+  }
+  & h4 {
+    @apply mt-8 mb-2 text-xl font-semibold;
+  }
+  & p {
+    @apply my-5;
+  }
+  & a {
+    @apply font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand;
+  }
+  & ul {
+    @apply my-5 list-disc ps-6;
+  }
+  & ol {
+    @apply my-5 list-decimal ps-6;
+  }
+  & li {
+    @apply my-1.5;
+  }
+  & blockquote {
+    @apply my-8 border-s-4 border-brand ps-6 text-xl text-ink;
+  }
+  & strong {
+    @apply font-semibold text-ink;
+  }
+  & img {
+    @apply my-8 rounded-card;
+  }
+  & > :first-child {
+    @apply mt-0;
+  }
+}
+
+.section-dark .prose-site,
+.section-dark .prose-site strong,
+.section-dark .prose-site blockquote {
+  @apply text-white/80;
+}
+
+/* ------------------------------------------------------------------ motion
+ * Scroll reveal: elements with [data-reveal] start hidden only once JS is
+ * running (html.js), so without JS – and for search engines – all content is
+ * visible. RevealObserver adds [data-revealed] when they enter the viewport.
+ * Stagger children by setting --i (0, 1, 2…) inline.
+ */
+[data-reveal] {
+  transition:
+    opacity 1.1s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1),
+    clip-path 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+  transition-delay: calc(var(--i, 0) * 150ms);
+}
+html.js [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(28px);
+}
+html.js [data-reveal='fade']:not([data-revealed]) {
+  transform: none;
+}
+html.js [data-reveal='start']:not([data-revealed]) {
+  transform: translateX(48px);
+}
+html.js [data-reveal='end']:not([data-revealed]) {
+  transform: translateX(-48px);
+}
+html.js [data-reveal='scale']:not([data-revealed]) {
+  transform: translateY(24px) scale(0.94);
+}
+/* Image curtain: wipes down from the top */
+html.js [data-reveal='wipe']:not([data-revealed]) {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+}
+[data-reveal='wipe'] {
+  clip-path: inset(0 0 0 0);
+}
+/* Masked line: rises out of an overflow-hidden parent, fast, with a short overlapping
+   stagger (--i); its blue full stop lands just after. */
+[data-reveal='mask'] {
+  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 120ms);
+}
+html.js [data-reveal='mask']:not([data-revealed]) {
+  opacity: 1;
+  transform: translateY(105%);
+}
+.manifesto-dot {
+  display: inline-block;
+  transition:
+    opacity 0.25s ease calc(var(--i, 0) * 120ms + 0.3s),
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 120ms + 0.3s);
+}
+html.js [data-reveal='mask']:not([data-revealed]) .manifesto-dot {
+  opacity: 0;
+  transform: translateY(-0.35em);
+}
+
+/* Only marks the element as seen (drives child effects), no own animation */
+html.js [data-reveal='none']:not([data-revealed]) {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero entrance on page load: words rise in one after another */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.rise-in {
+  animation: rise-in 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + var(--base, 0ms));
+}
+
+/* Animated gradient border (highlighted pricing card) */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+.glow-border {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--color-ink), var(--color-ink)) padding-box,
+    conic-gradient(
+        from var(--border-angle),
+        rgb(255 255 255 / 0.08) 0deg,
+        rgb(255 255 255 / 0.08) 200deg,
+        var(--color-brand) 260deg,
+        rgb(248 249 255 / 0.7) 310deg,
+        rgb(255 255 255 / 0.08) 360deg
+      )
+      border-box;
+  animation: border-spin 6s linear infinite;
+}
+
+/* Device showcase: once on screen, both screens scroll slowly through the site */
+@keyframes screen-scroll {
+  0%,
+  12% {
+    transform: translateY(0);
+  }
+  88%,
+  100% {
+    transform: translateY(calc(-100% + 100cqh));
+  }
+}
+[data-revealed] .screen-scroll {
+  animation: screen-scroll var(--scroll-duration, 16s) ease-in-out 1.2s infinite alternate;
+}
+
+/* Process steps: progress line fills, then each number lights up in turn */
+.process-fill {
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 2.6s cubic-bezier(0.65, 0, 0.35, 1) 0.5s;
+}
+[data-revealed] .process-fill {
+  transform: scaleX(1);
+}
+[data-revealed] .process-num {
+  color: var(--color-brand);
+  transition-delay: calc(0.8s + var(--i, 0) * 0.6s);
+}
+
+/* Highlighter: a lime marker stroke sweeps (right-to-left) under a key phrase
+   once its section is revealed. Text is fully readable the whole time. */
+.marker {
+  background-image: linear-gradient(transparent 60%, rgb(67 85 245 / 0.28) 60%, rgb(67 85 245 / 0.28) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 100% 100%;
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
+}
+html.js .marker {
+  background-size: 0% 100%;
+  transition: background-size 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.9s;
+}
+html.js [data-revealed] .marker {
+  background-size: 100% 100%;
+}
+
+/* FAQ: smooth open/close where supported (Chromium 131+); instant elsewhere */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details.faq-item::details-content,
+  details.svc-row::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
+      content-visibility 0.4s allow-discrete;
+  }
+  details.faq-item[open]::details-content,
+  details.svc-row[open]::details-content {
+    block-size: auto;
+  }
+  details.svc-row::details-content {
+    transition-duration: 0.3s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  details.faq-item::details-content,
+  details.svc-row::details-content {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------- display type scale
+ * Fluid sizes for the type-led layouts. Kept as utilities so every section
+ * shares one scale; values clamp so words never clip on narrow screens.
+ */
+@utility type-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+}
+@utility type-statement {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.25rem, 4.6vw, 4.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+/* --------------------------------------------------- scroll-driven motion
+ * ScrollProgress writes --p (0 → 1) on every [data-progress] element as it
+ * travels through the viewport. Effects read --p in CSS, so there is no
+ * scroll-jacking and nothing moves when motion is reduced (--p stays 0).
+ */
+[data-progress] {
+  --p: 0;
+}
+
+/* "Grow" headline: letters rise out of the baseline one after another */
+@keyframes grow-up {
+  from {
+    transform: scaleY(0.04);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.grow-letter {
+  display: inline-block;
+  transform-origin: 50% 88%;
+  animation: grow-up 0.95s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  animation-delay: calc(var(--base, 0ms) + var(--i, 0) * 90ms);
+}
+@keyframes baseline-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.baseline-draw {
+  transform-origin: right;
+  animation: baseline-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation-delay: var(--base, 0ms);
+}
+@keyframes dot-land {
+  0% {
+    transform: translateY(-1.2em) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(0.06em) scale(1.08);
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.dot-land {
+  display: inline-block;
+  animation: dot-land 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: var(--base, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grow-letter,
+  .baseline-draw,
+  .dot-land {
+    animation: none !important;
+  }
+  html.js [data-reveal]:not([data-revealed]),
+  html.js [data-reveal]:not([data-revealed]) .manifesto-dot {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+  [data-reveal],
+  .manifesto-dot,
+  .process-fill,
+  .process-num,
+  html.js .marker {
+    transition: none !important;
+  }
+  html.js .marker {
+    background-size: 100% 100%;
+  }
+  .process-fill {
+    transform: scaleX(1);
+  }
+  .rise-in,
+  .glow-border,
+  [data-revealed] .screen-scroll {
+    animation: none !important;
+  }
+  .btn::after {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------- selected work rail */
+.work-cursor {
+  scale: 0;
+  transition: scale 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.work-cursor[data-on] {
+  scale: 1;
+}
+@media (hover: none), (pointer: coarse) {
+  .work-cursor {
+    display: none;
+  }
+}
+/* Reduced motion: same cards, as a native horizontal scroller */
+.work-rail[data-static] .work-rail-pin {
+  position: relative;
+  height: auto;
+  padding-bottom: 1rem;
+}
+.work-rail[data-static] .work-rail-track {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-block: 2rem;
+}
+.work-rail[data-static] .work-rail-track > * {
+  scroll-snap-align: center;
+}
+
+/* Approach paragraph: grey until ColorReveal colours it with the scroll */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-w] {
+    color: rgb(196 198 206);
+  }
+}
+
+/* ------------------------------------------------------------- case study
+ * Opening on page load: the name rises out of its mask, the details follow,
+ * the site opens out of a smaller rounded window. Short, so nothing waits.
+ */
+.cs-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.04em;
+}
+.cs-line > span {
+  display: block;
+  animation: cs-rise 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.cs-fade {
+  animation: cs-fade 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s both;
+}
+.cs-hero-img {
+  animation: cs-open 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+}
+@keyframes cs-rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+@keyframes cs-fade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes cs-open {
+  from {
+    clip-path: inset(8% 7% 0 7% round 1.5rem);
+    transform: scale(1.04);
+  }
+  to {
+    clip-path: inset(0 round 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-line > span,
+  .cs-fade,
+  .cs-hero-img {
+    animation: none;
+  }
+}
+
+/* Scrollable phone preview: the screen scrolls natively; its own scrollbar is
+   replaced by the thumb beside the frame. The hint's wheel line nudges down. */
+.phone-screen {
+  scrollbar-width: none;
+  overscroll-behavior: auto;
+}
+.phone-screen::-webkit-scrollbar {
+  display: none;
+}
+.phone-hint line {
+  animation: phone-hint 1.6s ease-in-out infinite;
+}
+@keyframes phone-hint {
+  50% {
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-hint line {
+    animation: none;
+  }
+}
+
+/* Process timeline: steps ahead of the reading line wait in a lighter tone, the one
+   just reached takes the blue number, those passed settle. Only with JS running;
+   without it (or with reduced motion, [data-static]) every step shows at full strength. */
+.process-step .process-n,
+.process-step h3,
+.process-step p,
+.process-dot {
+  transition:
+    color 0.45s ease,
+    opacity 0.45s ease,
+    background-color 0.45s ease,
+    border-color 0.45s ease;
+}
+.process-step .process-n {
+  color: var(--color-ink);
+}
+.section-dark .process-step .process-n {
+  color: var(--color-muted);
+}
+.process-dot {
+  color: var(--color-brand);
+}
+.process-step[data-state='current'] .process-n {
+  color: var(--color-brand);
+}
+.process-step[data-state='current'] .process-dot {
+  background-color: var(--color-brand);
+}
+html.js .process-line:not([data-static]) .process-step[data-state='ahead'] :is(.process-n, h3, p) {
+  opacity: 0.28;
+}
+html.js .process-line:not([data-static]) .process-step[data-state='ahead'] .process-dot {
+  color: color-mix(in srgb, var(--color-ink) 18%, transparent);
+}
+html.js .process-line:not([data-static]) .process-line-fill {
+  transform: scaleY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .process-line-fill {
+    transform: none !important;
+  }
+}
+
+/* ── Projects gallery (src/blocks/ProjectGallery) ─────────────────────────────
+   Base: a plain list (no JS, reduced motion). With motion, the cards sit on one
+   large wheel inside a pinned frame; the JS places them (translate + rotate from
+   one angle) and sets the exact heights. Card size follows the reference: most
+   of a phone, ~40% of a tablet, ~26% of a desktop and about half its height. */
+.pg {
+  --cw: min(72vw, calc((100svh - 300px) * 0.8));
+  --sp: calc(var(--cw) * 1.08); /* arc length between neighbours; geometry() in the JS */
+  --rest: 50vw; /* the upright place: the centre of the screen */
+}
+@media (min-width: 768px) {
+  .pg {
+    --cw: min(40vw, calc((100svh - 280px) * 0.8));
+    --sp: calc(var(--cw) * 1.12);
+  }
+}
+@media (min-width: 1024px) {
+  .pg { --cw: min(26vw, calc(50svh * 0.8)); }
+}
+.pg-track {
+  display: grid;
+  gap: 2rem;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+@media (min-width: 768px) {
+  .pg-track { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 6vh 2rem 12vh; gap: 2.5rem; }
+}
+@media (min-width: 1024px) {
+  .pg-track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.pg-meter { display: none; }
+.pg-image { aspect-ratio: 4 / 5; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .pg { overflow: clip; }
+  .js .pg-outer {
+    /* First paint close to the measured height (frame + travel), so nothing shifts. */
+    height: calc(var(--cw) * 1.25 + 9rem + (var(--n) - 1) * var(--sp));
+  }
+  .js .pg-view {
+    /* As tall as its content; the JS sets the top that centres it while pinned. */
+    position: sticky;
+    top: 72px;
+    padding: 1.75rem 0 1.5rem;
+    overflow-x: clip;
+  }
+  .js .pg-meter { display: flex; margin-bottom: 0.75rem; }
+  .js .pg-track {
+    position: relative;
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    /* The upright card plus room for the shallow drop of its neighbours. */
+    height: calc(var(--cw) * 1.25 + 2rem);
+  }
+  .js .pg-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--cw);
+    transform-origin: 50% 50%;
+    will-change: transform;
+    /* Before the JS runs: the same places along a straight line. */
+    transform: translateX(calc(var(--rest) + var(--i) * var(--sp) - var(--cw) / 2));
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
+  .js .pg-view { padding: 3rem 0 2.5rem; }
+  .js .pg-meter { margin-bottom: 1.25rem; }
+  .js .pg-track { height: calc(var(--cw) * 1.25 + 4rem); }
+}
+
+/* Testimonial rotator: graphic quotation marks and a crossfade with a small rise. */
+.qr-mark {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 0.8;
+  color: var(--color-brand);
+  font-size: 6.5rem;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  scale: 0.85;
+  transition:
+    opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.qr-open {
+  top: 0;
+  inset-inline-start: -0.04em;
+  transform-origin: top right;
+}
+.qr-close {
+  bottom: -0.32em;
+  inset-inline-end: -0.04em;
+  transform-origin: bottom left;
+}
+@media (min-width: 768px) {
+  .qr-mark {
+    font-size: 11rem;
+  }
+}
+.qr[data-in] .qr-mark {
+  opacity: 1;
+  scale: 1;
+}
+.qr[data-in] .qr-mark[data-pulse] {
+  animation: qr-pulse 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes qr-pulse {
+  50% {
+    scale: 1.04;
+  }
+}
+.qr-item {
+  opacity: 0;
+  translate: 0 8px;
+  visibility: hidden;
+  transition:
+    opacity 450ms ease,
+    translate 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s 450ms;
+}
+.qr-item[data-active] {
+  opacity: 1;
+  translate: 0 0;
+  visibility: visible;
+  transition-delay: 120ms, 120ms, 0s;
+}
+.qr-bar {
+  transform-origin: right;
+}
+.qr-bar[data-run] {
+  animation: qr-progress 7s linear both;
+}
+@keyframes qr-progress {
+  from {
+    scale: 0 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qr-mark,
+  .qr-item {
+    transition: none;
+  }
+  .qr-mark {
+    opacity: 1;
+    scale: 1;
+  }
+  .qr[data-in] .qr-mark[data-pulse],
+  .qr-bar[data-run] {
+    animation: none;
+  }
+}
+
+/* Service rows: the clicked row keeps its place while another closes above it
+   (KeepRowInView), so the browser's own scroll anchoring stays out of it. */
+details.svc-row {
+  overflow-anchor: none;
+}
+
+/*
+ * About page (AboutStudio block).
+ * Blueprint: plan → structure → product, desktop then phone. Without
+ * [data-play] (no JS, reduced motion) every layer is in its finished state.
+ */
+.bp-layer {
+  transform: translate(calc(var(--px, 0) * var(--d) * -1px), calc(var(--py, 0) * var(--d) * -1px));
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.bp-guide {
+  stroke: rgb(248 249 255 / 0.09);
+  stroke-dasharray: 2 5;
+}
+.bp-note text {
+  fill: rgb(248 249 255 / 0.42);
+  font: 500 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.06em;
+}
+.bp-wire {
+  stroke: rgb(248 249 255 / 0.18);
+  stroke-width: 1.25;
+  stroke-dasharray: 1;
+}
+.bp-ripple {
+  opacity: 0;
+}
+.bp[data-play] .bp-guide {
+  animation: bp-fade 0.6s calc(var(--i) * 45ms) both;
+}
+.bp[data-play] .bp-note {
+  animation: bp-fade 0.8s 0.5s both;
+}
+.bp[data-play] .bp-wire {
+  animation:
+    bp-draw 0.9s calc(0.5s + var(--i) * 0.12s) cubic-bezier(0.65, 0, 0.35, 1) both,
+    bp-wire-dim 0.8s 2.5s both;
+}
+.bp[data-play] .bp-fill {
+  animation: bp-rise 0.7s calc(2.1s + var(--i) * 0.22s) cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.bp[data-play] .bp-button {
+  animation: bp-rise 0.6s 2.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.bp[data-play] .bp-tap {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    bp-rise 0.6s 3.4s cubic-bezier(0.2, 0.7, 0.2, 1) both,
+    bp-press 0.35s 4.2s ease-in-out both;
+}
+.bp[data-play] .bp-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bp-ripple 0.8s 4.2s ease-out both;
+}
+@keyframes bp-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes bp-draw {
+  from {
+    stroke-dashoffset: 1;
+    stroke: rgb(248 249 255 / 0.6);
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke: rgb(248 249 255 / 0.6);
+  }
+}
+@keyframes bp-wire-dim {
+  from {
+    stroke: rgb(248 249 255 / 0.6);
+  }
+}
+@keyframes bp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes bp-press {
+  50% {
+    transform: scale(0.94);
+  }
+}
+@keyframes bp-ripple {
+  from {
+    opacity: 1;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+/* Experience: lines are scaled by script, from their right end. */
+.xp-line {
+  transform-box: view-box;
+}
+
+/* Founder: --f (0 → 1) opens the panel from a slit, slides the name, raises the portrait. */
+.founder-panel {
+  clip-path: inset(calc((1 - var(--f, 1)) * 10%) calc((1 - var(--f, 1)) * 41%) round 1.75rem);
+}
+.founder-name {
+  transform: translateX(calc((var(--f, 1) - 0.35) * 28%));
+}
+.founder-cutout {
+  opacity: calc(0.25 + var(--f, 1) * 0.75);
+  transform: translateY(calc((1 - var(--f, 1)) * 16%)) scale(calc(1.1 - var(--f, 1) * 0.1));
+  transform-origin: bottom center;
+}
+
+/* Proof: the language now on screen. */
+.lf-lang {
+  transition: color 0.4s;
+}
+.lf-lang[data-on] {
+  color: #fff;
+}
+.lf-lang[data-on] .lf-dot {
+  background: var(--color-brand);
+  box-shadow: 0 0 0 4px rgb(67 85 245 / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-layer {
+    transition: none;
+  }
+}

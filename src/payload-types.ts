@@ -67,35 +67,71 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    pages: Page;
+    services: Service;
+    projects: Project;
+    posts: Post;
+    categories: Category;
+    testimonials: Testimonial;
+    faqs: Faq;
+    clients: Client;
     media: Media;
+    leads: Lead;
+    users: User;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    clients: ClientsSelect<false> | ClientsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    leads: LeadsSelect<false> | LeadsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    header: Header;
+    footer: Footer;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    header: HeaderSelect<false> | HeaderSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      schedulePublish: TaskSchedulePublish;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -118,11 +154,727 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * העמוד עם הכתובת home הוא דף הבית
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  layout?:
+    | (
+        | HeroBlock
+        | ManifestoBlock
+        | AboutStudioBlock
+        | WorkRailBlock
+        | ServiceStackBlock
+        | ServiceMenuBlock
+        | StatementBlock
+        | QuoteRotatorBlock
+        | ProjectStoriesBlock
+        | CapabilitiesBlock
+        | RichTextBlock
+        | ImageTextBlock
+        | FounderBlock
+        | DeviceShowcaseBlock
+        | ServicesGridBlock
+        | PricingBlock
+        | FeatureGridBlock
+        | ProjectGalleryBlock
+        | ProjectsGridBlock
+        | ProcessStepsBlock
+        | StatsBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | LogoCloudBlock
+        | BlogTeaserBlock
+        | CTABlock
+        | ContactStartBlock
+        | ContactFormBlock
+      )[]
+    | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+    /**
+     * לדפי תודה, דפי נחיתה זמניים וכו׳
+     */
+    noIndex?: boolean | null;
+  };
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * החלק בכתובת ה־URL. לדוגמה: about → /about
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  variant?: ('home' | 'personal' | 'page') | null;
+  eyebrow?: string | null;
+  /**
+   * כדי להדגיש מילים בצבע המותג, עטוף אותן בכוכביות: *אתרים שמוכרים*
+   */
+  heading: string;
+  subheading?: string | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+          appearance?: ('primary' | 'secondary' | 'link') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  image?: (number | null) | Media;
+  /**
+   * PNG עם רקע שקוף, חתוך עד המותניים. בלי תמונה, הכותרת מוצגת במרכז ברוחב מלא
+   */
+  portrait?: (number | null) | Media;
+  /**
+   * מילה אחת מתוך הכותרת שתוצג בענק ו"תצמח" בכניסה (למשל: צומח). מה שלפניה מוצג מעליה, ומה שאחריה בכחול לצידה
+   */
+  growWord?: string | null;
+  /**
+   * מוצג בגופן כתב יד עברי, למשל: אהרן רייס
+   */
+  signatureText?: string | null;
+  /**
+   * PNG שקוף או SVG. אם הועלה, מוצג במקום הטקסט
+   */
+  signatureImage?: (number | null) | Media;
+  /**
+   * משפט קצר בכל בועה. **כוכביות כפולות** מדגישות מילים
+   */
+  bubbles?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  floatingTestimonial?: (number | null) | Testimonial;
+  proof?: {
+    value?: string | null;
+    label?: string | null;
+  };
+  highlights?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  _order?: string | null;
+  title: string;
+  excerpt: string;
+  icon?:
+    | (
+        | 'code'
+        | 'design'
+        | 'cart'
+        | 'rocket'
+        | 'search'
+        | 'mobile'
+        | 'wrench'
+        | 'megaphone'
+        | 'layers'
+        | 'building'
+        | 'school'
+        | 'refresh'
+        | 'briefcase'
+        | 'users'
+      )
+    | null;
+  image?: (number | null) | Media;
+  pricing?: {
+    /**
+     * ריק = "הצעת מחיר מותאמת"
+     */
+    price?: number | null;
+    /**
+     * כבוי או בלי מחיר = "מחיר בהתאם לפרויקט"
+     */
+    showPrice?: boolean | null;
+    priceNote?: string | null;
+    /**
+     * למשל: חבילת הליבה
+     */
+    badge?: string | null;
+    /**
+     * משפט או שניים שמסבירים מה המוצר עושה בשביל העסק
+     */
+    purpose?: string | null;
+    /**
+     * מוצג כשאין רשימת תחומים
+     */
+    idealFor?: string | null;
+    /**
+     * למשל: מכללות, קליניקות, משרדים
+     */
+    niches?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    process?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    included?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    highlighted?: boolean | null;
+  };
+  menu?: {
+    heading?: string | null;
+    text?: string | null;
+    /**
+     * דוגמאות למה שאפשר לבנות, לא רשימת מה כלול במחיר ההתחלתי
+     */
+    capabilities?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    ctaLabel?: string | null;
+    /**
+     * בדיוק כמו אחת האפשרויות בטופס, למשל: אתר תדמית. נבחר מראש כשעוברים מכאן לטופס
+     */
+    contactType?: string | null;
+    /**
+     * קישור לפרויקט אמיתי מהסוג הזה. ריק = בלי קישור
+     */
+    exampleProject?: (number | null) | Project;
+  };
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  features?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  layout?:
+    | (
+        | HeroBlock
+        | ManifestoBlock
+        | AboutStudioBlock
+        | WorkRailBlock
+        | ServiceStackBlock
+        | ServiceMenuBlock
+        | StatementBlock
+        | QuoteRotatorBlock
+        | ProjectStoriesBlock
+        | CapabilitiesBlock
+        | RichTextBlock
+        | ImageTextBlock
+        | FounderBlock
+        | DeviceShowcaseBlock
+        | ServicesGridBlock
+        | PricingBlock
+        | FeatureGridBlock
+        | ProjectGalleryBlock
+        | ProjectsGridBlock
+        | ProcessStepsBlock
+        | StatsBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | LogoCloudBlock
+        | BlogTeaserBlock
+        | CTABlock
+        | ContactStartBlock
+        | ContactFormBlock
+      )[]
+    | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+    /**
+     * לדפי תודה, דפי נחיתה זמניים וכו׳
+     */
+    noIndex?: boolean | null;
+  };
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * החלק בכתובת ה־URL. לדוגמה: about → /about
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * תיאור התמונה לנגישות ול־SEO
+   */
+  alt: string;
+  caption?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects".
+ */
+export interface Project {
+  id: number;
+  _order?: string | null;
+  title: string;
+  client?: string | null;
+  year?: number | null;
+  excerpt: string;
+  /**
+   * מוצג בכרטיס הפרויקט בדף הבית. מה הלקוח היה צריך, בלי מספרים שלא נמדדו.
+   */
+  need?: string | null;
+  /**
+   * מוצג בכרטיס לצד הצורך. אם יש לפרויקט המלצה אמיתית (בלשונית Case Study), היא מוצגת מתחתיו.
+   */
+  answer?: string | null;
+  coverImage: number | Media;
+  /**
+   * יחס 16:10, למשל 1440×900. ריק = התמונה הראשית
+   */
+  galleryWide?: (number | null) | Media;
+  /**
+   * יחס 4:5, למשל 780×975. ריק = התמונה הראשית
+   */
+  galleryTall?: (number | null) | Media;
+  /**
+   * למשל: חנות, וורדפרס, דף נחיתה
+   */
+  tags?: string[] | null;
+  /**
+   * מוצג בשורת הכתובת של הדפדפן
+   */
+  websiteUrl?: string | null;
+  /**
+   * רוחב 1440. צילום ארוך (full page) נגלל בתוך המסגרת במעבר עכבר
+   */
+  desktopScreenshot?: (number | null) | Media;
+  /**
+   * 390×844 (או כפול לחדות)
+   */
+  mobileScreenshot?: (number | null) | Media;
+  /**
+   * מסך אחד של האתר, 2880×1800. ברירת מחדל: צילום הדסקטופ
+   */
+  heroImage?: (number | null) | Media;
+  /**
+   * כמה מסכים ברצף, נגלל בתצוגת הדסקטופ. ברירת מחדל: צילום הדסקטופ
+   */
+  desktopScroll?: (number | null) | Media;
+  /**
+   * כל עמוד הבית במובייל, 390 ברוחב (פי 2). המבקרים גוללים בו בתוך הטלפון. ברירת מחדל: צילום המובייל
+   */
+  mobilePreview?: (number | null) | Media;
+  mobileNote?: string | null;
+  details?:
+    | {
+        title: string;
+        text: string;
+        images: (number | Media)[];
+        kind?: ('desktop' | 'mobile') | null;
+        id?: string | null;
+      }[]
+    | null;
+  services?: (number | Service)[] | null;
+  challenge?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  solution?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  results?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  gallery?: (number | Media)[] | null;
+  testimonial?: (number | null) | Testimonial;
+  layout?:
+    | (
+        | HeroBlock
+        | ManifestoBlock
+        | AboutStudioBlock
+        | WorkRailBlock
+        | ServiceStackBlock
+        | ServiceMenuBlock
+        | StatementBlock
+        | QuoteRotatorBlock
+        | ProjectStoriesBlock
+        | CapabilitiesBlock
+        | RichTextBlock
+        | ImageTextBlock
+        | FounderBlock
+        | DeviceShowcaseBlock
+        | ServicesGridBlock
+        | PricingBlock
+        | FeatureGridBlock
+        | ProjectGalleryBlock
+        | ProjectsGridBlock
+        | ProcessStepsBlock
+        | StatsBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | LogoCloudBlock
+        | BlogTeaserBlock
+        | CTABlock
+        | ContactStartBlock
+        | ContactFormBlock
+      )[]
+    | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+    /**
+     * לדפי תודה, דפי נחיתה זמניים וכו׳
+     */
+    noIndex?: boolean | null;
+  };
+  /**
+   * מוצג ברשתות "פרויקטים מומלצים"
+   */
+  featured?: boolean | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * החלק בכתובת ה־URL. לדוגמה: about → /about
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  _order?: string | null;
+  quote: string;
+  name: string;
+  role?: string | null;
+  company?: string | null;
+  avatar?: (number | null) | Media;
+  rating?: number | null;
+  project?: (number | null) | Project;
+  /**
+   * מסומן = מוצגת באתר עם תווית "המלצה זמנית". מבטלים את הסימון כשמזינים המלצה אמיתית.
+   */
+  placeholder?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ManifestoBlock".
+ */
+export interface ManifestoBlock {
+  /**
+   * כל שורה עולה בנפרד; השורה האחרונה גדולה ובכחול. למשל: אתם לא צריכים להבין בבניית אתרים. ⏎ בשביל זה אנחנו כאן.
+   */
+  question?: string | null;
+  /**
+   * כל שורה נחשפת בתורה. הנקודה הכחולה בסוף נוספת אוטומטית.
+   */
+  lines?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * התשובה שלנו, מוצגת מתחת למניפסט. *כוכביות* מסמנות מילים שנשארות כחולות.
+   */
+  approach?: string | null;
+  /**
+   * היכרות קצרה לצד פסקת הגישה. 2–3 משפטים, רק מידע אמיתי.
+   */
+  person?: {
+    name?: string | null;
+    role?: string | null;
+    text?: string | null;
+    /**
+     * PNG עם רקע שקוף (גזורה), באותו גודל כמו תמונת החיוך
+     */
+    portrait?: (number | null) | Media;
+    /**
+     * אותה תמונה עם חיוך: מתחלפת בריחוף בדסקטופ ופעם אחת בנייד
+     */
+    portraitSmile?: (number | null) | Media;
+  };
+  index?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'manifesto';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  excerpt?: string | null;
+  heroImage?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  relatedPosts?: (number | Post)[] | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+    /**
+     * לדפי תודה, דפי נחיתה זמניים וכו׳
+     */
+    noIndex?: boolean | null;
+  };
+  categories?: (number | Category)[] | null;
+  authors?: (number | User)[] | null;
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * החלק בכתובת ה־URL. לדוגמה: about → /about
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * החלק בכתובת ה־URL. לדוגמה: about → /about
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
+  name?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -130,6 +882,7 @@ export interface User {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -144,29 +897,1205 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "AboutStudioBlock".
  */
-export interface Media {
-  id: string;
-  alt: string;
+export interface AboutStudioBlock {
+  intro: {
+    eyebrow?: string | null;
+    /**
+     * הקיפו חלק בכוכביות כדי לצבוע אותו בכחול ולהעביר אותו לשורה משלו, למשל: עיצוב שחושב קדימה. *פיתוח שיודע לבצע.*
+     */
+    heading: string;
+    text?: string | null;
+  };
+  experience: {
+    eyebrow?: string | null;
+    years: number;
+    label: string;
+    text?: string | null;
+    points?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  founder: {
+    eyebrow?: string | null;
+    headline?: string | null;
+    name: string;
+    role?: string | null;
+    text?: string | null;
+    portrait: number | Media;
+  };
+  proof: {
+    eyebrow?: string | null;
+    /**
+     * הקיפו חלק בכוכביות כדי לצבוע אותו בכחול ולהעביר אותו לשורה משלו, למשל: עיצוב שחושב קדימה. *פיתוח שיודע לבצע.*
+     */
+    heading: string;
+    text?: string | null;
+    project?: (number | null) | Project;
+    linkLabel?: string | null;
+    screens?:
+      | {
+          label: string;
+          desktop: number | Media;
+          phone: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  closing: {
+    /**
+     * הקיפו חלק בכוכביות כדי לצבוע אותו בכחול ולהעביר אותו לשורה משלו, למשל: עיצוב שחושב קדימה. *פיתוח שיודע לבצע.*
+     */
+    heading: string;
+    text?: string | null;
+    primary: {
+      type?: ('reference' | 'custom') | null;
+      newTab?: boolean | null;
+      reference?:
+        | ({
+            relationTo: 'pages';
+            value: number | Page;
+          } | null)
+        | ({
+            relationTo: 'services';
+            value: number | Service;
+          } | null)
+        | ({
+            relationTo: 'projects';
+            value: number | Project;
+          } | null)
+        | ({
+            relationTo: 'posts';
+            value: number | Post;
+          } | null);
+      /**
+       * למשל https://… , /contact , #faq , tel:… , mailto:…
+       */
+      url?: string | null;
+      label: string;
+      appearance?: ('primary' | 'secondary' | 'link') | null;
+    };
+    secondary?: {
+      type?: ('reference' | 'custom') | null;
+      newTab?: boolean | null;
+      reference?:
+        | ({
+            relationTo: 'pages';
+            value: number | Page;
+          } | null)
+        | ({
+            relationTo: 'services';
+            value: number | Service;
+          } | null)
+        | ({
+            relationTo: 'projects';
+            value: number | Project;
+          } | null)
+        | ({
+            relationTo: 'posts';
+            value: number | Post;
+          } | null);
+      /**
+       * למשל https://… , /contact , #faq , tel:… , mailto:…
+       */
+      url?: string | null;
+      label?: string | null;
+      appearance?: ('primary' | 'secondary' | 'link') | null;
+    };
+  };
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'aboutStudio';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "WorkRailBlock".
+ */
+export interface WorkRailBlock {
+  heading: string;
+  /**
+   * הגלילה האנכית מזיזה את הכרטיסים לרוחב. התמונות נלקחות מ"תצוגת מכשירים" בפרויקט.
+   */
+  items: {
+    project: number | Project;
+    /**
+     * הרקע מקבל את הגוון כשהכרטיס במרכז, למשל #1d2a63
+     */
+    tone?: string | null;
+    id?: string | null;
+  }[];
+  closingTitle?: string | null;
+  closingLink?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+  };
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'workRail';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceStackBlock".
+ */
+export interface ServiceStackBlock {
+  heading: string;
+  /**
+   * בגלילה כל כרטיס עולה ונערם על הקודם, ופס עליון של הקודמים נשאר גלוי. הסדר כאן הוא סדר ההופעה, והמספור (01 / 03) מחושב ממנו.
+   */
+  cards: {
+    /**
+     * השם המוכר של השירות, למשל: אתרי תדמית ואתרי מותג
+     */
+    label: string;
+    /**
+     * קצרה ומשפט אחד. אפשר לשבור שורה ב־Enter
+     */
+    title: string;
+    description: string;
+    theme: 'white' | 'light' | 'brand' | 'dark';
+    link?: {
+      type?: ('reference' | 'custom') | null;
+      newTab?: boolean | null;
+      reference?:
+        | ({
+            relationTo: 'pages';
+            value: number | Page;
+          } | null)
+        | ({
+            relationTo: 'services';
+            value: number | Service;
+          } | null)
+        | ({
+            relationTo: 'projects';
+            value: number | Project;
+          } | null)
+        | ({
+            relationTo: 'posts';
+            value: number | Post;
+          } | null);
+      /**
+       * למשל https://… , /contact , #faq , tel:… , mailto:…
+       */
+      url?: string | null;
+      label?: string | null;
+    };
+    id?: string | null;
+  }[];
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'serviceStack';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceMenuBlock".
+ */
+export interface ServiceMenuBlock {
+  heading: string;
+  intro?: string | null;
+  /**
+   * ריק = כל השירותים שפורסמו, לפי הסדר ברשימת השירותים. התוכן של כל שורה נערך בשירות עצמו: "חבילה ומחיר" ו"עמוד מה אנחנו מציעים".
+   */
+  services?: (number | Service)[] | null;
+  note?: string | null;
+  proofLead?: string | null;
+  proof?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+    appearance?: ('primary' | 'secondary' | 'link') | null;
+  };
+  /**
+   * ריק = /contact
+   */
+  contactPage?: (number | null) | Page;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'serviceMenu';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatementBlock".
+ */
+export interface StatementBlock {
+  /**
+   * הקיפו ביטוי קצר בכוכביות כדי לצבוע אותו בכחול, למשל: לא משנה הגודל. *חשוב לנו שזה יהיה מדויק.*
+   */
+  heading: string;
+  text?: string | null;
+  cta?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+    appearance?: ('primary' | 'secondary' | 'link') | null;
+  };
+  ctaNote?: string | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'statement';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteRotatorBlock".
+ */
+export interface QuoteRotatorBlock {
+  label?: string | null;
+  /**
+   * מוצגת המלצה אחת בכל פעם, לפי הסדר כאן. המלצה שמסומנת "זמנית" מוצגת עם תווית שאומרת זאת.
+   */
+  testimonials: (number | Testimonial)[];
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'quoteRotator';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectStoriesBlock".
+ */
+export interface ProjectStoriesBlock {
+  eyebrow?: string | null;
+  /**
+   * הקיפו את השורה השנייה בכוכביות כדי לצבוע אותה בכחול, למשל: לא רק איך זה נראה. *גם למה זה עובד.*
+   */
+  heading: string;
+  intro?: string | null;
+  stories?:
+    | {
+        project: number | Project;
+        /**
+         * למשל SEA VIEW
+         */
+        label?: string | null;
+        headline: string;
+        text: string;
+        layout?: ('browser' | 'phones') | null;
+        /**
+         * וידאו MP4 קצר ושקט (5-8 שניות) או צילום מסך ביחס 16:10
+         */
+        desktop?: (number | null) | Media;
+        desktopPoster?: (number | null) | Media;
+        /**
+         * מוצג גם במובייל, כהדגמה היחידה
+         */
+        phone?: (number | null) | Media;
+        phonePoster?: (number | null) | Media;
+        phone2?: (number | null) | Media;
+        linkLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'projectStories';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CapabilitiesBlock".
+ */
+export interface CapabilitiesBlock {
+  /**
+   * כל מילה שמסתיימת בנקודה עולה בנפרד
+   */
+  statement: string;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * מה כלול בכל פרויקט ומה ניתן כשירות נוסף
+   */
+  note?: string | null;
+  closing?: string | null;
+  link?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+  };
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'capabilities';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock".
+ */
+export interface RichTextBlock {
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  width?: ('narrow' | 'wide') | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'richText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock".
+ */
+export interface ImageTextBlock {
+  eyebrow?: string | null;
+  heading: string;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  image?: (number | null) | Media;
+  imagePosition?: ('end' | 'start') | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+          appearance?: ('primary' | 'secondary' | 'link') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FounderBlock".
+ */
+export interface FounderBlock {
+  eyebrow?: string | null;
+  /**
+   * מוצג בגדול. *כוכביות* מדגישות בצבע המותג
+   */
+  quote: string;
+  text?: string | null;
+  portrait?: (number | null) | Media;
+  /**
+   * מוצג בגופן כתב יד עברי, למשל: אהרן רייס
+   */
+  signatureText?: string | null;
+  /**
+   * PNG שקוף או SVG. אם הועלה, מוצג במקום הטקסט
+   */
+  signatureImage?: (number | null) | Media;
+  name?: string | null;
+  role?: string | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+          appearance?: ('primary' | 'secondary' | 'link') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'founder';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DeviceShowcaseBlock".
+ */
+export interface DeviceShowcaseBlock {
+  source?: ('project' | 'custom') | null;
+  /**
+   * הצילומים וכתובת האתר נלקחים מלשונית "תצוגת מכשירים" של הפרויקט
+   */
+  project?: (number | null) | Project;
+  desktop?: (number | null) | Media;
+  mobile?: (number | null) | Media;
+  url?: string | null;
+  badge?: string | null;
+  eyebrow?: string | null;
+  heading?: string | null;
+  text?: string | null;
+  bullets?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+          appearance?: ('primary' | 'secondary' | 'link') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  devicesPosition?: ('end' | 'start') | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'deviceShowcase';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServicesGridBlock".
+ */
+export interface ServicesGridBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * השאר ריק כדי להציג את כל השירותים לפי הסדר שנקבע
+   */
+  services?: (number | Service)[] | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'servicesGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PricingBlock".
+ */
+export interface PricingBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * השאר ריק כדי להציג את כל השירותים לפי הסדר. המחירים נערכים בלשונית "חבילה ומחיר" של כל שירות
+   */
+  services?: (number | Service)[] | null;
+  /**
+   * כפתור "לקבלת הצעה" מוביל לכאן, עם החבילה כבר מסומנת בטופס
+   */
+  contactPage?: (number | null) | Page;
+  ctaLabel?: string | null;
+  note?: string | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pricing';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock".
+ */
+export interface FeatureGridBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  items?:
+    | {
+        icon?:
+          | (
+              | 'code'
+              | 'design'
+              | 'cart'
+              | 'rocket'
+              | 'search'
+              | 'mobile'
+              | 'wrench'
+              | 'megaphone'
+              | 'layers'
+              | 'building'
+              | 'school'
+              | 'refresh'
+              | 'briefcase'
+              | 'users'
+            )
+          | null;
+        title: string;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  columns?: ('2' | '3' | '4') | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'featureGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectGalleryBlock".
+ */
+export interface ProjectGalleryBlock {
+  heading: string;
+  /**
+   * מתחת לפסקה מוצגים כל הפרויקטים שפורסמו, לפי הסדר ברשימת הפרויקטים, עם "תמונה לעמוד הפרויקטים" של כל פרויקט.
+   */
+  intro?: string | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'projectGallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectsGridBlock".
+ */
+export interface ProjectsGridBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  mode?: ('featured' | 'all' | 'selected') | null;
+  projects?: (number | Project)[] | null;
+  limit?: number | null;
+  showLink?: boolean | null;
+  link?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+  };
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'projectsGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProcessStepsBlock".
+ */
+export interface ProcessStepsBlock {
+  variant?: ('grid' | 'timeline' | 'row') | null;
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  steps?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * שורת יכולות קצרה אחרי השלבים, שנצבעת בכחול בגלילה.
+   */
+  outro?: {
+    /**
+     * למשל: ומה עם כל מה שמאחורי הקלעים?
+     */
+    question?: string | null;
+    /**
+     * מילים שמסתיימות בנקודה, למשל: אפיון. UX/UI. פיתוח.
+     */
+    words?: string | null;
+    /**
+     * למשל: הפתרון והיקף השירותים נקבעים בהתאם לצרכים של כל פרויקט.
+     */
+    note?: string | null;
+  };
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'processSteps';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatsBlock".
+ */
+export interface StatsBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  items?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stats';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock".
+ */
+export interface TestimonialsBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * השאר ריק כדי להציג את כל ההמלצות
+   */
+  testimonials?: (number | Testimonial)[] | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'testimonials';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FAQBlock".
+ */
+export interface FAQBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * השאר ריק כדי להציג את כל השאלות לפי הסדר שנקבע
+   */
+  faqs?: (number | Faq)[] | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  _order?: string | null;
+  question: string;
+  answer: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoCloudBlock".
+ */
+export interface LogoCloudBlock {
+  heading?: string | null;
+  /**
+   * השאר ריק כדי להציג את כל הלקוחות
+   */
+  clients?: (number | Client)[] | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoCloud';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients".
+ */
+export interface Client {
+  id: number;
+  _order?: string | null;
+  name: string;
+  logo: number | Media;
   url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlogTeaserBlock".
+ */
+export interface BlogTeaserBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * 0 = כל המאמרים (לעמוד הבלוג הראשי)
+   */
+  limit?: number | null;
+  category?: (number | null) | Category;
+  showLink?: boolean | null;
+  link?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+  };
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'blogTeaser';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CTABlock".
+ */
+export interface CTABlock {
+  heading: string;
+  text?: string | null;
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+          appearance?: ('primary' | 'secondary' | 'link') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('light' | 'muted' | 'dark' | 'brand') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'cta';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactStartBlock".
+ */
+export interface ContactStartBlock {
+  heading: string;
+  intro?: string | null;
+  projectTypes?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  greeting?: string | null;
+  signoff?: string | null;
+  directMessage?: string | null;
+  faqHeading?: string | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contactStart';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactFormBlock".
+ */
+export interface ContactFormBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  intro?: string | null;
+  /**
+   * הפרטים נלקחים מהגדרות האתר
+   */
+  showContactDetails?: boolean | null;
+  serviceOptions?: boolean | null;
+  submitLabel?: string | null;
+  successMessage?: string | null;
+  background?: ('light' | 'muted' | 'dark') | null;
+  /**
+   * לקישור ישיר לאזור בעמוד, למשל faq → /#faq
+   */
+  anchor?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contactForm';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads".
+ */
+export interface Lead {
+  id: number;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  company?: string | null;
+  service?: string | null;
+  message?: string | null;
+  status?: ('new' | 'in-progress' | 'won' | 'lost') | null;
+  notes?: string | null;
+  source?: {
+    page?: string | null;
+    utmSource?: string | null;
+    utmMedium?: string | null;
+    utmCampaign?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    url?: string | null;
+  };
+  type: '301' | '302';
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -180,23 +2109,155 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'schedulePublish';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'schedulePublish') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: string | User;
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'projects';
+        value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
+      } | null)
+    | ({
+        relationTo: 'clients';
+        value: number | Client;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'leads';
+        value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   updatedAt: string;
   createdAt: string;
@@ -206,10 +2267,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
+  id: number;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   key?: string | null;
   value?:
@@ -229,7 +2290,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -237,9 +2298,1160 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        manifesto?: T | ManifestoBlockSelect<T>;
+        aboutStudio?: T | AboutStudioBlockSelect<T>;
+        workRail?: T | WorkRailBlockSelect<T>;
+        serviceStack?: T | ServiceStackBlockSelect<T>;
+        serviceMenu?: T | ServiceMenuBlockSelect<T>;
+        statement?: T | StatementBlockSelect<T>;
+        quoteRotator?: T | QuoteRotatorBlockSelect<T>;
+        projectStories?: T | ProjectStoriesBlockSelect<T>;
+        capabilities?: T | CapabilitiesBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        founder?: T | FounderBlockSelect<T>;
+        deviceShowcase?: T | DeviceShowcaseBlockSelect<T>;
+        servicesGrid?: T | ServicesGridBlockSelect<T>;
+        pricing?: T | PricingBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        projectGallery?: T | ProjectGalleryBlockSelect<T>;
+        projectsGrid?: T | ProjectsGridBlockSelect<T>;
+        processSteps?: T | ProcessStepsBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        faq?: T | FAQBlockSelect<T>;
+        logoCloud?: T | LogoCloudBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        cta?: T | CTABlockSelect<T>;
+        contactStart?: T | ContactStartBlockSelect<T>;
+        contactForm?: T | ContactFormBlockSelect<T>;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+        noIndex?: T;
+      };
+  publishedAt?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  variant?: T;
+  eyebrow?: T;
+  heading?: T;
+  subheading?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  image?: T;
+  portrait?: T;
+  growWord?: T;
+  signatureText?: T;
+  signatureImage?: T;
+  bubbles?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  floatingTestimonial?: T;
+  proof?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+      };
+  highlights?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ManifestoBlock_select".
+ */
+export interface ManifestoBlockSelect<T extends boolean = true> {
+  question?: T;
+  lines?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  approach?: T;
+  person?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        text?: T;
+        portrait?: T;
+        portraitSmile?: T;
+      };
+  index?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AboutStudioBlock_select".
+ */
+export interface AboutStudioBlockSelect<T extends boolean = true> {
+  intro?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        text?: T;
+      };
+  experience?:
+    | T
+    | {
+        eyebrow?: T;
+        years?: T;
+        label?: T;
+        text?: T;
+        points?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  founder?:
+    | T
+    | {
+        eyebrow?: T;
+        headline?: T;
+        name?: T;
+        role?: T;
+        text?: T;
+        portrait?: T;
+      };
+  proof?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        text?: T;
+        project?: T;
+        linkLabel?: T;
+        screens?:
+          | T
+          | {
+              label?: T;
+              desktop?: T;
+              phone?: T;
+              id?: T;
+            };
+      };
+  closing?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        primary?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        secondary?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "WorkRailBlock_select".
+ */
+export interface WorkRailBlockSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        project?: T;
+        tone?: T;
+        id?: T;
+      };
+  closingTitle?: T;
+  closingLink?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceStackBlock_select".
+ */
+export interface ServiceStackBlockSelect<T extends boolean = true> {
+  heading?: T;
+  cards?:
+    | T
+    | {
+        label?: T;
+        title?: T;
+        description?: T;
+        theme?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceMenuBlock_select".
+ */
+export interface ServiceMenuBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  services?: T;
+  note?: T;
+  proofLead?: T;
+  proof?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+        appearance?: T;
+      };
+  contactPage?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatementBlock_select".
+ */
+export interface StatementBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  cta?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+        appearance?: T;
+      };
+  ctaNote?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteRotatorBlock_select".
+ */
+export interface QuoteRotatorBlockSelect<T extends boolean = true> {
+  label?: T;
+  testimonials?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectStoriesBlock_select".
+ */
+export interface ProjectStoriesBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  stories?:
+    | T
+    | {
+        project?: T;
+        label?: T;
+        headline?: T;
+        text?: T;
+        layout?: T;
+        desktop?: T;
+        desktopPoster?: T;
+        phone?: T;
+        phonePoster?: T;
+        phone2?: T;
+        linkLabel?: T;
+        id?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CapabilitiesBlock_select".
+ */
+export interface CapabilitiesBlockSelect<T extends boolean = true> {
+  statement?: T;
+  items?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  note?: T;
+  closing?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock_select".
+ */
+export interface RichTextBlockSelect<T extends boolean = true> {
+  content?: T;
+  width?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock_select".
+ */
+export interface ImageTextBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  content?: T;
+  image?: T;
+  imagePosition?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FounderBlock_select".
+ */
+export interface FounderBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  quote?: T;
+  text?: T;
+  portrait?: T;
+  signatureText?: T;
+  signatureImage?: T;
+  name?: T;
+  role?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DeviceShowcaseBlock_select".
+ */
+export interface DeviceShowcaseBlockSelect<T extends boolean = true> {
+  source?: T;
+  project?: T;
+  desktop?: T;
+  mobile?: T;
+  url?: T;
+  badge?: T;
+  eyebrow?: T;
+  heading?: T;
+  text?: T;
+  bullets?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  devicesPosition?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServicesGridBlock_select".
+ */
+export interface ServicesGridBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  services?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PricingBlock_select".
+ */
+export interface PricingBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  services?: T;
+  contactPage?: T;
+  ctaLabel?: T;
+  note?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock_select".
+ */
+export interface FeatureGridBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  items?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  columns?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectGalleryBlock_select".
+ */
+export interface ProjectGalleryBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProjectsGridBlock_select".
+ */
+export interface ProjectsGridBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  mode?: T;
+  projects?: T;
+  limit?: T;
+  showLink?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProcessStepsBlock_select".
+ */
+export interface ProcessStepsBlockSelect<T extends boolean = true> {
+  variant?: T;
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  steps?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  outro?:
+    | T
+    | {
+        question?: T;
+        words?: T;
+        note?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatsBlock_select".
+ */
+export interface StatsBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  items?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock_select".
+ */
+export interface TestimonialsBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  testimonials?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FAQBlock_select".
+ */
+export interface FAQBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  faqs?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoCloudBlock_select".
+ */
+export interface LogoCloudBlockSelect<T extends boolean = true> {
+  heading?: T;
+  clients?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlogTeaserBlock_select".
+ */
+export interface BlogTeaserBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  limit?: T;
+  category?: T;
+  showLink?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CTABlock_select".
+ */
+export interface CTABlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactStartBlock_select".
+ */
+export interface ContactStartBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  projectTypes?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  greeting?: T;
+  signoff?: T;
+  directMessage?: T;
+  faqHeading?: T;
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactFormBlock_select".
+ */
+export interface ContactFormBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  showContactDetails?: T;
+  serviceOptions?: T;
+  submitLabel?: T;
+  successMessage?: T;
+  background?: T;
+  anchor?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  _order?: T;
+  title?: T;
+  excerpt?: T;
+  icon?: T;
+  image?: T;
+  pricing?:
+    | T
+    | {
+        price?: T;
+        showPrice?: T;
+        priceNote?: T;
+        badge?: T;
+        purpose?: T;
+        idealFor?: T;
+        niches?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        process?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        included?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        highlighted?: T;
+      };
+  menu?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        capabilities?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        ctaLabel?: T;
+        contactType?: T;
+        exampleProject?: T;
+      };
+  content?: T;
+  features?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        manifesto?: T | ManifestoBlockSelect<T>;
+        aboutStudio?: T | AboutStudioBlockSelect<T>;
+        workRail?: T | WorkRailBlockSelect<T>;
+        serviceStack?: T | ServiceStackBlockSelect<T>;
+        serviceMenu?: T | ServiceMenuBlockSelect<T>;
+        statement?: T | StatementBlockSelect<T>;
+        quoteRotator?: T | QuoteRotatorBlockSelect<T>;
+        projectStories?: T | ProjectStoriesBlockSelect<T>;
+        capabilities?: T | CapabilitiesBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        founder?: T | FounderBlockSelect<T>;
+        deviceShowcase?: T | DeviceShowcaseBlockSelect<T>;
+        servicesGrid?: T | ServicesGridBlockSelect<T>;
+        pricing?: T | PricingBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        projectGallery?: T | ProjectGalleryBlockSelect<T>;
+        projectsGrid?: T | ProjectsGridBlockSelect<T>;
+        processSteps?: T | ProcessStepsBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        faq?: T | FAQBlockSelect<T>;
+        logoCloud?: T | LogoCloudBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        cta?: T | CTABlockSelect<T>;
+        contactStart?: T | ContactStartBlockSelect<T>;
+        contactForm?: T | ContactFormBlockSelect<T>;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+        noIndex?: T;
+      };
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  _order?: T;
+  title?: T;
+  client?: T;
+  year?: T;
+  excerpt?: T;
+  need?: T;
+  answer?: T;
+  coverImage?: T;
+  galleryWide?: T;
+  galleryTall?: T;
+  tags?: T;
+  websiteUrl?: T;
+  desktopScreenshot?: T;
+  mobileScreenshot?: T;
+  heroImage?: T;
+  desktopScroll?: T;
+  mobilePreview?: T;
+  mobileNote?: T;
+  details?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        images?: T;
+        kind?: T;
+        id?: T;
+      };
+  services?: T;
+  challenge?: T;
+  solution?: T;
+  results?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  gallery?: T;
+  testimonial?: T;
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        manifesto?: T | ManifestoBlockSelect<T>;
+        aboutStudio?: T | AboutStudioBlockSelect<T>;
+        workRail?: T | WorkRailBlockSelect<T>;
+        serviceStack?: T | ServiceStackBlockSelect<T>;
+        serviceMenu?: T | ServiceMenuBlockSelect<T>;
+        statement?: T | StatementBlockSelect<T>;
+        quoteRotator?: T | QuoteRotatorBlockSelect<T>;
+        projectStories?: T | ProjectStoriesBlockSelect<T>;
+        capabilities?: T | CapabilitiesBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        founder?: T | FounderBlockSelect<T>;
+        deviceShowcase?: T | DeviceShowcaseBlockSelect<T>;
+        servicesGrid?: T | ServicesGridBlockSelect<T>;
+        pricing?: T | PricingBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        projectGallery?: T | ProjectGalleryBlockSelect<T>;
+        projectsGrid?: T | ProjectsGridBlockSelect<T>;
+        processSteps?: T | ProcessStepsBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        faq?: T | FAQBlockSelect<T>;
+        logoCloud?: T | LogoCloudBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        cta?: T | CTABlockSelect<T>;
+        contactStart?: T | ContactStartBlockSelect<T>;
+        contactForm?: T | ContactFormBlockSelect<T>;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+        noIndex?: T;
+      };
+  featured?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  excerpt?: T;
+  heroImage?: T;
+  content?: T;
+  relatedPosts?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+        noIndex?: T;
+      };
+  categories?: T;
+  authors?: T;
+  publishedAt?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  _order?: T;
+  quote?: T;
+  name?: T;
+  role?: T;
+  company?: T;
+  avatar?: T;
+  rating?: T;
+  project?: T;
+  placeholder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  _order?: T;
+  question?: T;
+  answer?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients_select".
+ */
+export interface ClientsSelect<T extends boolean = true> {
+  _order?: T;
+  name?: T;
+  logo?: T;
+  url?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  caption?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads_select".
+ */
+export interface LeadsSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  company?: T;
+  service?: T;
+  message?: T;
+  status?: T;
+  notes?: T;
+  source?:
+    | T
+    | {
+        page?: T;
+        utmSource?: T;
+        utmMedium?: T;
+        utmCampaign?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -247,6 +3459,7 @@ export interface UsersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
+  resetPasswordRequestedAt?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -259,21 +3472,20 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "redirects_select".
  */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  type?: T;
   updatedAt?: T;
   createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -282,6 +3494,37 @@ export interface MediaSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -317,6 +3560,414 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header".
+ */
+export interface Header {
+  id: number;
+  navItems?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+        };
+        children?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null;
+                newTab?: boolean | null;
+                reference?:
+                  | ({
+                      relationTo: 'pages';
+                      value: number | Page;
+                    } | null)
+                  | ({
+                      relationTo: 'services';
+                      value: number | Service;
+                    } | null)
+                  | ({
+                      relationTo: 'projects';
+                      value: number | Project;
+                    } | null)
+                  | ({
+                      relationTo: 'posts';
+                      value: number | Post;
+                    } | null);
+                /**
+                 * למשל https://… , /contact , #faq , tel:… , mailto:…
+                 */
+                url?: string | null;
+                label: string;
+              };
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * הכפתור הבולט בצד התפריט, למשל "בואו נדבר"
+   */
+  cta?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'services';
+          value: number | Service;
+        } | null)
+      | ({
+          relationTo: 'projects';
+          value: number | Project;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    /**
+     * למשל https://… , /contact , #faq , tel:… , mailto:…
+     */
+    url?: string | null;
+    label?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  about?: string | null;
+  columns?:
+    | {
+        title: string;
+        links?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null;
+                newTab?: boolean | null;
+                reference?:
+                  | ({
+                      relationTo: 'pages';
+                      value: number | Page;
+                    } | null)
+                  | ({
+                      relationTo: 'services';
+                      value: number | Service;
+                    } | null)
+                  | ({
+                      relationTo: 'projects';
+                      value: number | Project;
+                    } | null)
+                  | ({
+                      relationTo: 'posts';
+                      value: number | Post;
+                    } | null);
+                /**
+                 * למשל https://… , /contact , #faq , tel:… , mailto:…
+                 */
+                url?: string | null;
+                label: string;
+              };
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * מדיניות פרטיות, הצהרת נגישות וכו׳
+   */
+  bottomLinks?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'services';
+                value: number | Service;
+              } | null)
+            | ({
+                relationTo: 'projects';
+                value: number | Project;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          /**
+           * למשל https://… , /contact , #faq , tel:… , mailto:…
+           */
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * {year} מוחלף אוטומטית בשנה הנוכחית
+   */
+  copyright?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName?: string | null;
+  tagline?: string | null;
+  /**
+   * כהה (Deep Navy). מומלץ SVG שקוף. ריק = לוגו REISS DIGITAL המובנה
+   */
+  logo?: (number | null) | Media;
+  /**
+   * בהיר (לבן). משמש בתפריט העליון ובפוטר. מומלץ SVG שקוף. ריק = לוגו REISS DIGITAL המובנה
+   */
+  logoLight?: (number | null) | Media;
+  contact?: {
+    phone?: string | null;
+    email?: string | null;
+    /**
+     * בפורמט בינלאומי, ספרות בלבד: 972501234567. משמש את כפתור הוואטסאפ הצף ואת טופס יצירת הקשר. ריק = הכפתור מוסתר
+     */
+    whatsapp?: string | null;
+    whatsappMessage?: string | null;
+    address?: string | null;
+    hours?: string | null;
+    social?:
+      | {
+          platform: 'facebook' | 'instagram' | 'linkedin' | 'tiktok' | 'youtube' | 'x';
+          url: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  seo?: {
+    /**
+     * %s מוחלף בכותרת העמוד
+     */
+    titleTemplate?: string | null;
+    defaultDescription?: string | null;
+    defaultImage?: (number | null) | Media;
+    organizationType?: ('ProfessionalService' | 'Organization' | 'LocalBusiness') | null;
+  };
+  integrations?: {
+    /**
+     * G-XXXXXXXXXX. ריק = Analytics לא נטען
+     */
+    ga4Id?: string | null;
+    /**
+     * רק הקוד מתוך תגית ה־meta (content="..."), בלי התגית עצמה
+     */
+    gscVerification?: string | null;
+    accessibility?: {
+      enabled?: boolean | null;
+      /**
+       * כפתור הוואטסאפ נמצא בצד ימין
+       */
+      position?: ('left' | 'right') | null;
+      email?: string | null;
+      /**
+       * למשל /accessibility. ריק = בלי קישור להצהרה
+       */
+      statementUrl?: string | null;
+    };
+    leadNotificationEmails?:
+      | {
+          email: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header_select".
+ */
+export interface HeaderSelect<T extends boolean = true> {
+  navItems?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        children?:
+          | T
+          | {
+              link?:
+                | T
+                | {
+                    type?: T;
+                    newTab?: T;
+                    reference?: T;
+                    url?: T;
+                    label?: T;
+                  };
+              id?: T;
+            };
+        id?: T;
+      };
+  cta?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  about?: T;
+  columns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              link?:
+                | T
+                | {
+                    type?: T;
+                    newTab?: T;
+                    reference?: T;
+                    url?: T;
+                    label?: T;
+                  };
+              id?: T;
+            };
+        id?: T;
+      };
+  bottomLinks?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  tagline?: T;
+  logo?: T;
+  logoLight?: T;
+  contact?:
+    | T
+    | {
+        phone?: T;
+        email?: T;
+        whatsapp?: T;
+        whatsappMessage?: T;
+        address?: T;
+        hours?: T;
+        social?:
+          | T
+          | {
+              platform?: T;
+              url?: T;
+              id?: T;
+            };
+      };
+  seo?:
+    | T
+    | {
+        titleTemplate?: T;
+        defaultDescription?: T;
+        defaultImage?: T;
+        organizationType?: T;
+      };
+  integrations?:
+    | T
+    | {
+        ga4Id?: T;
+        gscVerification?: T;
+        accessibility?:
+          | T
+          | {
+              enabled?: T;
+              position?: T;
+              email?: T;
+              statementUrl?: T;
+            };
+        leadNotificationEmails?:
+          | T
+          | {
+              email?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -324,6 +3975,31 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSchedulePublish".
+ */
+export interface TaskSchedulePublish {
+  input: {
+    type?: ('publish' | 'unpublish') | null;
+    locale?: string | null;
+    doc?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    global?: string | null;
+    user?: {
+      relationTo: 'users';
+      value: number | User;
+    } | null;
+  };
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
