@@ -141,8 +141,11 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'ga4Id',
               type: 'text',
-              label: 'Google Analytics 4 Measurement ID',
-              admin: { description: 'G-XXXXXXXXXX. ריק = Analytics לא נטען' },
+              label: 'Google Analytics / Tag Manager ID',
+              admin: {
+                description:
+                  'G-XXXXXXXXXX ל־Google Analytics, או GTM-XXXXXXX ל־Tag Manager (ואז GA4 מוגדר בתוך GTM). ריק = לא נטען דבר',
+              },
             },
             {
               name: 'gscVerification',

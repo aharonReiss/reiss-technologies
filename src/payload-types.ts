@@ -3788,7 +3788,7 @@ export interface SiteSetting {
   };
   integrations?: {
     /**
-     * G-XXXXXXXXXX. ריק = Analytics לא נטען
+     * G-XXXXXXXXXX ל־Google Analytics, או GTM-XXXXXXX ל־Tag Manager (ואז GA4 מוגדר בתוך GTM). ריק = לא נטען דבר
      */
     ga4Id?: string | null;
     /**

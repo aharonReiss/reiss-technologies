@@ -13,8 +13,10 @@ import { jsonLd, shareImage } from '@/utilities/seo'
 export async function SiteScripts() {
   const settings = await getGlobal('site-settings', 1)
   const { contact, seo, integrations } = settings
+  // One field takes either a GA4 Measurement ID (G-…) or a Tag Manager container (GTM-…).
   const ga = integrations?.ga4Id?.trim()
   const gaOk = ga && /^G-[A-Z0-9]+$/i.test(ga)
+  const gtmOk = ga && /^GTM-[A-Z0-9]+$/i.test(ga)
   const a11y = integrations?.accessibility
   const home = absoluteURL('/')
   const name = settings.siteName || 'REISS DIGITAL'
@@ -63,6 +65,12 @@ export async function SiteScripts() {
             {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${ga}');`}
           </Script>
         </>
+      )}
+
+      {gtmOk && (
+        <Script id="gtm" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${ga}');`}
+        </Script>
       )}
 
       {a11y?.enabled !== false && (
