@@ -1,3 +1,4 @@
+import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
 import React from 'react'
 
 import { Icon } from '@/components/Icon'
@@ -5,6 +6,7 @@ import { RichText } from '@/components/RichText'
 import { Section, SectionHeader } from '@/components/Section'
 import type { FAQBlock as FAQBlockProps, Faq } from '@/payload-types'
 import { getPayloadClient } from '@/utilities/payload'
+import { faqJsonLd } from '@/utilities/seo'
 
 export async function FAQBlock({
   eyebrow,
@@ -22,8 +24,13 @@ export async function FAQBlock({
     faqs = res.docs
   }
 
+  const structured = faqJsonLd(
+    faqs.map((f) => ({ question: f.question, answer: convertLexicalToPlaintext({ data: f.answer }).trim() })),
+  )
+
   return (
     <Section background={background} anchor={anchor}>
+      {structured && <script type="application/ld+json" dangerouslySetInnerHTML={structured} />}
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <SectionHeader eyebrow={eyebrow} heading={heading} intro={intro} className="lg:sticky lg:top-28" />

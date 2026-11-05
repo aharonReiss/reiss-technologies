@@ -5,7 +5,8 @@ import type { Page, Project, Service, ServiceMenuBlock as ServiceMenuBlockProps 
 import { resolveHref } from '@/components/CMSLink'
 import { formatPrice } from '@/utilities/format'
 import { getPayloadClient } from '@/utilities/payload'
-import { docPath } from '@/utilities/routes'
+import { absoluteURL, docPath } from '@/utilities/routes'
+import { jsonLd, organizationRef } from '@/utilities/seo'
 import { KeepRowInView } from './KeepRowInView'
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -33,8 +34,35 @@ export async function ServiceMenuBlock({ heading, intro, services: selected, not
   const title = heading.replace(/\.$/, '')
   const proofHref = proof?.label ? resolveHref(proof) : null
 
+  // Each service as offered by the studio; a starting price only where it is shown on the page.
+  const structured = services.map((s) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: s.title.replace(/\.$/, ''),
+    description: s.excerpt,
+    url: absoluteURL(docPath('services', s.slug)),
+    provider: organizationRef(),
+    areaServed: { '@type': 'Country', name: 'Israel' },
+    ...(s.pricing?.price && s.pricing.showPrice !== false
+      ? {
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'ILS',
+            priceSpecification: {
+              '@type': 'PriceSpecification',
+              minPrice: s.pricing.price,
+              priceCurrency: 'ILS',
+              // Stated only when the price note on the page says so ("לפני מע״מ").
+              ...(/לפני מע/.test(s.pricing.priceNote ?? '') ? { valueAddedTaxIncluded: false } : {}),
+            },
+          },
+        }
+      : {}),
+  }))
+
   return (
     <section id={anchor || undefined} className="bg-muted text-ink">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structured)} />
       <div className="container-site pt-[calc(72px+2rem)] pb-16 md:pt-[calc(72px+8vh)] md:pb-[12vh]">
         <header className="max-w-[46rem]">
           <h1 className="m-0 font-display text-[clamp(3rem,14vw,4.2rem)] leading-[0.95] font-black tracking-[-0.045em] !text-ink md:text-[min(7.4vw,13svh,7.5rem)]">

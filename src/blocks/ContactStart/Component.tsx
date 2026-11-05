@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { ContactStartBlock as ContactStartBlockProps } from '@/payload-types'
 import { getGlobal } from '@/utilities/payload'
+import { faqJsonLd } from '@/utilities/seo'
 import { WhatsAppForm } from './WhatsAppForm'
 
 /**
@@ -25,8 +26,11 @@ export async function ContactStartBlock({
   const title = heading.replace(/\.$/, '')
   const questions = faqs ?? []
 
+  const structured = faqJsonLd(questions)
+
   return (
     <>
+      {structured && <script type="application/ld+json" dangerouslySetInnerHTML={structured} />}
       <section id={anchor || undefined} className="bg-muted text-ink">
         <div className="container-site grid gap-6 pt-[calc(72px+1.5rem)] pb-14 md:grid-cols-12 md:gap-x-16 md:pt-[calc(72px+9vh)] md:pb-[12vh]">
           <div className="md:col-span-5">

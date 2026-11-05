@@ -57,3 +57,23 @@ export function buildMetadata({ settings, title, description, path, image, noInd
 
 /** JSON-LD as a script body; "<" is escaped so content can never close the tag. */
 export const jsonLd = (data: unknown) => ({ __html: JSON.stringify(data).replace(/</g, '\\u003c') })
+
+/** The studio and its founder as structured-data references; both nodes are defined once in SiteScripts. */
+export const FOUNDER_NAME = 'אהרן רייס'
+export const organizationRef = () => ({ '@id': `${absoluteURL('/')}#organization` })
+export const founderRef = () => ({ '@id': `${absoluteURL('/')}#founder` })
+
+/** FAQPage structured data for questions shown on the page, answers as plain text. */
+export function faqJsonLd(items: { question: string; answer: string }[]) {
+  const list = items.filter((f) => f.question && f.answer)
+  if (list.length === 0) return null
+  return jsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: list.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  })
+}

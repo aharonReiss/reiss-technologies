@@ -3,7 +3,7 @@ import React from 'react'
 
 import { getGlobal } from '@/utilities/payload'
 import { absoluteURL } from '@/utilities/routes'
-import { jsonLd, shareImage } from '@/utilities/seo'
+import { FOUNDER_NAME, founderRef, jsonLd, organizationRef, shareImage } from '@/utilities/seo'
 
 /**
  * Everything third-party, driven by Site Settings: Google Analytics 4 (only with
@@ -20,7 +20,9 @@ export async function SiteScripts() {
   const a11y = integrations?.accessibility
   const home = absoluteURL('/')
   const name = settings.siteName || 'REISS DIGITAL'
-  const logo = shareImage(settings.logo)?.url || absoluteURL('/brand/logo-light-bg.svg')
+  // Search engines want a raster logo: an uploaded SVG falls back to the built-in PNG.
+  const uploaded = shareImage(settings.logo)?.url
+  const logo = uploaded && !/\.svg($|\?)/i.test(uploaded) ? uploaded : absoluteURL('/brand/logo-light-bg.png')
   // Real profiles only: a bare network homepage (https://facebook.com) is a placeholder.
   const sameAs = (contact?.social ?? [])
     .map((s) => s.url)
@@ -41,7 +43,17 @@ export async function SiteScripts() {
       address: contact?.address ? { '@type': 'PostalAddress', streetAddress: contact.address, addressCountry: 'IL' } : undefined,
       areaServed: { '@type': 'Country', name: 'Israel' },
       knowsLanguage: ['he', 'en'],
+      founder: founderRef(),
       ...(sameAs.length ? { sameAs } : {}),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      '@id': founderRef()['@id'],
+      name: FOUNDER_NAME,
+      jobTitle: 'מייסד',
+      worksFor: organizationRef(),
+      url: absoluteURL('/about'),
     },
     {
       '@context': 'https://schema.org',

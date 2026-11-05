@@ -6,10 +6,10 @@ import React from 'react'
 import { PostCard } from '@/components/Cards'
 import { Media } from '@/components/Media'
 import { RichText } from '@/components/RichText'
-import type { Category, Post, User } from '@/payload-types'
+import type { Category, Post } from '@/payload-types'
 import { getDocBySlug, getGlobal, getPayloadClient } from '@/utilities/payload'
 import { absoluteURL, docPath } from '@/utilities/routes'
-import { buildMetadata, jsonLd, shareImage } from '@/utilities/seo'
+import { FOUNDER_NAME, buildMetadata, founderRef, jsonLd, organizationRef, shareImage } from '@/utilities/seo'
 
 type Args = { params: Promise<{ slug: string }> }
 
@@ -34,7 +34,6 @@ export default async function PostPage({ params }: Args) {
   if (!post) notFound()
 
   const categories = (post.categories ?? []).filter((c): c is Category => typeof c === 'object')
-  const authors = (post.authors ?? []).filter((a): a is User => typeof a === 'object')
   const related = (post.relatedPosts ?? []).filter((p): p is Post => typeof p === 'object' && p._status !== 'draft')
   const url = absoluteURL(docPath('posts', post.slug))
 
@@ -50,8 +49,8 @@ export default async function PostPage({ params }: Args) {
       image: shareImage(post.heroImage)?.url,
       datePublished: post.publishedAt || post.createdAt,
       dateModified: post.updatedAt,
-      author: { '@id': `${absoluteURL('/')}#organization` },
-      publisher: { '@id': `${absoluteURL('/')}#organization` },
+      author: founderRef(),
+      publisher: organizationRef(),
     },
     {
       '@context': 'https://schema.org',
@@ -89,9 +88,13 @@ export default async function PostPage({ params }: Args) {
             {post.title}
           </h1>
           {post.excerpt && <p className="mt-6 mb-0 text-lg leading-[1.7] text-body md:text-xl">{post.excerpt}</p>}
-          {authors.length > 0 && (
-            <p className="mt-5 mb-0 text-sm text-body/80">{authors.map((a) => a.name || a.email).join(' · ')}</p>
-          )}
+          <p className="mt-5 mb-0 text-sm text-body/80">
+            מאת{' '}
+            <Link href="/about" rel="author" className="font-semibold text-ink no-underline hover:text-brand">
+              {FOUNDER_NAME}
+            </Link>
+            , מייסד REISS DIGITAL
+          </p>
         </div>
         {post.heroImage && (
           <div className="mx-auto mt-10 max-w-[1100px] overflow-hidden rounded-xl md:mt-14 md:rounded-2xl">
