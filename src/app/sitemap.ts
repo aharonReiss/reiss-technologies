@@ -17,10 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     where: { 'meta.noIndex': { not_equals: true } },
     select: { slug: true, updatedAt: true },
   } as const
-  const [pages, projects] = await Promise.all([
+  const [pages, projects, posts] = await Promise.all([
     payload.find({ collection: 'pages', ...query }),
     payload.find({ collection: 'projects', ...query }),
+    payload.find({ collection: 'posts', ...query }),
   ])
+  const hasBlogPage = pages.docs.some((d) => d.slug === 'blog')
 
   return [
     ...pages.docs
@@ -33,5 +35,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...projects.docs
       .filter((d) => d.slug)
       .map((d) => ({ url: absoluteURL(docPath('projects', d.slug)), lastModified: d.updatedAt, priority: 0.7 })),
+    // The built-in /blog index, while no CMS page named "blog" stands in for it.
+    ...(posts.docs.length && !hasBlogPage ? [{ url: absoluteURL('/blog'), priority: 0.6 }] : []),
+    ...posts.docs
+      .filter((d) => d.slug)
+      .map((d) => ({ url: absoluteURL(docPath('posts', d.slug)), lastModified: d.updatedAt, priority: 0.6 })),
   ]
 }

@@ -23,7 +23,7 @@ export const HOME_SLUG = 'home'
 export const hasDetailPage: Record<Exclude<LinkableCollection, 'pages'>, boolean> = {
   projects: true,
   services: false,
-  posts: false,
+  posts: true,
 }
 
 /** Index page of each collection, used while its documents have no page of their own. */
