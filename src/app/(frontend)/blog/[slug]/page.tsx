@@ -144,9 +144,11 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
   ])
   if (!post) return {}
   const template = settings.seo?.titleTemplate || '%s'
+  const title = post.meta?.title || post.title
   return buildMetadata({
     settings,
-    title: template.replace('%s', post.meta?.title || post.title),
+    // A full SEO title that already names the site is used as written.
+    title: title.includes(settings.siteName || 'REISS DIGITAL') ? title : template.replace('%s', title),
     description: post.meta?.description || post.excerpt,
     path: docPath('posts', post.slug),
     image: post.meta?.image || post.heroImage,
