@@ -10,6 +10,8 @@ import sharp from 'sharp'
 
 import { authenticated } from './access'
 import { Categories } from './collections/Categories'
+import { ClientFiles } from './collections/ClientFiles'
+import { ClientProfiles } from './collections/ClientProfiles'
 import { Clients } from './collections/Clients'
 import { FAQs } from './collections/FAQs'
 import { Leads } from './collections/Leads'
@@ -23,6 +25,7 @@ import { Users } from './collections/Users'
 import { richTextEditor } from './fields/richText'
 import { Footer } from './globals/Footer'
 import { Header } from './globals/Header'
+import { Questionnaire } from './globals/Questionnaire'
 import { SiteSettings } from './globals/SiteSettings'
 import { revalidateHooks } from './hooks/revalidate'
 import { docPath, getServerURL, linkableCollections } from './utilities/routes'
@@ -77,8 +80,10 @@ export default buildConfig({
     Media,
     Leads,
     Users,
+    ClientProfiles,
+    ClientFiles,
   ],
-  globals: [Header, Footer, SiteSettings],
+  globals: [Header, Footer, SiteSettings, Questionnaire],
   editor: richTextEditor,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

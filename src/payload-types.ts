@@ -78,6 +78,8 @@ export interface Config {
     media: Media;
     leads: Lead;
     users: User;
+    'client-profiles': ClientProfile;
+    'client-files': ClientFile;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -85,7 +87,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    'client-profiles': {
+      files: 'client-files';
+    };
+  };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
@@ -98,6 +104,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'client-profiles': ClientProfilesSelect<false> | ClientProfilesSelect<true>;
+    'client-files': ClientFilesSelect<false> | ClientFilesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -113,11 +121,13 @@ export interface Config {
     header: Header;
     footer: Footer;
     'site-settings': SiteSetting;
+    questionnaire: Questionnaire;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    questionnaire: QuestionnaireSelect<false> | QuestionnaireSelect<true>;
   };
   locale: null;
   widgets: {
@@ -2059,6 +2069,95 @@ export interface Lead {
   createdAt: string;
 }
 /**
+ * אחרי השמירה נוצר ללקוח קישור אישי לשאלון. מעתיקים אותו ושולחים בוואטסאפ או במייל.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "client-profiles".
+ */
+export interface ClientProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  businessName?: string | null;
+  projectName?: string | null;
+  /**
+   * גלוי רק לך באדמין. הלקוח לא רואה את זה.
+   */
+  notes?: string | null;
+  files?: {
+    docs?: (number | ClientFile)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * מתעדכן לבד. להחזרה ל"בתהליך" אחרי שליחה, כדי שהלקוח יוכל לערוך שוב.
+   */
+  status: 'not-started' | 'in-progress' | 'completed';
+  lastActivityAt?: string | null;
+  submittedAt?: string | null;
+  /**
+   * כיבוי חוסם את הקישור בלי למחוק כלום
+   */
+  linkActive?: boolean | null;
+  archived?: boolean | null;
+  fullName?: string | null;
+  token?: string | null;
+  questionnaire?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  answers?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "client-files".
+ */
+export interface ClientFile {
+  id: number;
+  client: number | ClientProfile;
+  originalName?: string | null;
+  questionId?: string | null;
+  questionLabel?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -2249,6 +2348,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'client-profiles';
+        value: number | ClientProfile;
+      } | null)
+    | ({
+        relationTo: 'client-files';
+        value: number | ClientFile;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -3472,6 +3579,66 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "client-profiles_select".
+ */
+export interface ClientProfilesSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  email?: T;
+  phone?: T;
+  businessName?: T;
+  projectName?: T;
+  notes?: T;
+  files?: T;
+  status?: T;
+  lastActivityAt?: T;
+  submittedAt?: T;
+  linkActive?: T;
+  archived?: T;
+  fullName?: T;
+  token?: T;
+  questionnaire?: T;
+  answers?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "client-files_select".
+ */
+export interface ClientFilesSelect<T extends boolean = true> {
+  client?: T;
+  originalName?: T;
+  questionId?: T;
+  questionLabel?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -3818,6 +3985,55 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * שאלון אחד לכל הלקוחות. שינויים נשמרים כטיוטה ונכנסים לתוקף רק אחרי "פרסום", ללקוחות שעדיין לא התחילו.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questionnaire".
+ */
+export interface Questionnaire {
+  id: number;
+  /**
+   * כל שלב מוצג ללקוח כעמוד נפרד. גוררים כדי לשנות סדר.
+   */
+  sections?:
+    | {
+        title: string;
+        description?: string | null;
+        questions?:
+          | {
+              label: string;
+              type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'select' | 'yesno' | 'url' | 'file' | 'image';
+              required?: boolean | null;
+              help?: string | null;
+              placeholder?: string | null;
+              options?:
+                | {
+                    label: string;
+                    id?: string | null;
+                  }[]
+                | null;
+              multiple?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * מוצגת מתחת ל"היי {שם פרטי}". אפשר לכתוב כמה שורות.
+   */
+  intro?: string | null;
+  closingTitle?: string | null;
+  closingText?: string | null;
+  /**
+   * אם מגדילים מעל 50, צריך להגדיל גם את client_max_body_size ב־Nginx בשרת
+   */
+  maxFileSizeMB: number;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
@@ -3962,6 +4178,44 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questionnaire_select".
+ */
+export interface QuestionnaireSelect<T extends boolean = true> {
+  sections?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        questions?:
+          | T
+          | {
+              label?: T;
+              type?: T;
+              required?: T;
+              help?: T;
+              placeholder?: T;
+              options?:
+                | T
+                | {
+                    label?: T;
+                    id?: T;
+                  };
+              multiple?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  intro?: T;
+  closingTitle?: T;
+  closingText?: T;
+  maxFileSizeMB?: T;
+  _status?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -28,6 +28,11 @@ import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c08
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
+import { ClientResponses as ClientResponses_f9ce31a7c6bf3ef475a67b9ef83271b1 } from '@/components/admin/ClientResponses'
+import { OnboardingLink as OnboardingLink_fcd0528f4ffbf28e9ce9c657d697f6ad } from '@/components/admin/OnboardingLink'
+import { OnboardingLinkCell as OnboardingLinkCell_fcd0528f4ffbf28e9ce9c657d697f6ad } from '@/components/admin/OnboardingLink'
+import { QuestionRowLabel as QuestionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8 } from '@/components/admin/QuestionnaireRowLabel'
+import { SectionRowLabel as SectionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8 } from '@/components/admin/QuestionnaireRowLabel'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -62,5 +67,10 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
+  "@/components/admin/ClientResponses#ClientResponses": ClientResponses_f9ce31a7c6bf3ef475a67b9ef83271b1,
+  "@/components/admin/OnboardingLink#OnboardingLink": OnboardingLink_fcd0528f4ffbf28e9ce9c657d697f6ad,
+  "@/components/admin/OnboardingLink#OnboardingLinkCell": OnboardingLinkCell_fcd0528f4ffbf28e9ce9c657d697f6ad,
+  "@/components/admin/QuestionnaireRowLabel#QuestionRowLabel": QuestionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8,
+  "@/components/admin/QuestionnaireRowLabel#SectionRowLabel": SectionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

@@ -5,7 +5,7 @@ import { revalidateHooks } from '@/hooks/revalidate'
 
 export const Clients: CollectionConfig = {
   slug: 'clients',
-  labels: { singular: 'לקוח', plural: 'לקוחות' },
+  labels: { singular: 'לוגו לקוח', plural: 'לוגואים של לקוחות' },
   orderable: true,
   access: { create: authenticated, read: anyone, update: authenticated, delete: authenticated },
   admin: { group: 'רכיבים', useAsTitle: 'name' },
