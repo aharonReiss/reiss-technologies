@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '@/access'
 import { STATUS_LABELS, type ClientStatus } from '@/onboarding/types'
+import { decrypt, encrypt, isEncrypted } from '@/utilities/secrets'
 
 /** 32 random bytes, URL-safe: the client's whole key to their questionnaire. */
 export const newToken = () => randomBytes(32).toString('base64url')
@@ -58,6 +59,67 @@ export const ClientProfiles: CollectionConfig = {
               type: 'textarea',
               label: 'הערות פנימיות',
               admin: { description: 'גלוי רק לך באדמין. הלקוח לא רואה את זה.' },
+            },
+          ],
+        },
+        {
+          label: 'גישות למערכות',
+          description: 'הסיסמאות נשמרות מוצפנות (AES-256). גלוי רק לאדמין מחובר, לעולם לא ללקוח.',
+          fields: [
+            {
+              name: 'credentials',
+              type: 'array',
+              label: 'מערכות',
+              labels: { singular: 'מערכת', plural: 'מערכות' },
+              admin: { components: { RowLabel: '@/components/admin/QuestionnaireRowLabel#CredentialRowLabel' } },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'system', type: 'text', label: 'שם המערכת', required: true, admin: { width: '50%', placeholder: 'למשל: אחסון, דומיין, וורדפרס' } },
+                    { name: 'url', type: 'text', label: 'כתובת כניסה', admin: { width: '50%', rtl: false } },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'username',
+                      type: 'text',
+                      label: 'משתמש',
+                      admin: { width: '50%', components: { Field: '@/components/admin/SecretField#SecretField' } },
+                    },
+                    {
+                      name: 'password',
+                      type: 'text',
+                      label: 'סיסמה',
+                      admin: {
+                        width: '50%',
+                        components: { Field: { path: '@/components/admin/SecretField#SecretField', clientProps: { secret: true } } },
+                      },
+                      hooks: {
+                        // Stored encrypted; an already-encrypted value (unchanged) is kept as is.
+                        beforeChange: [({ value }) => (typeof value === 'string' && value && !isEncrypted(value) ? encrypt(value) : value)],
+                        // Decrypted only for a logged-in admin. Server code without a user (the
+                        // questionnaire saving a client's answers) gets the stored ciphertext, which
+                        // it writes back unchanged; a request from outside without a user gets null.
+                        afterRead: [
+                          ({ value, req }) => {
+                            if (!req.user) return req.payloadAPI === 'local' ? value : null
+                            if (!isEncrypted(value)) return value
+                            try {
+                              return decrypt(value)
+                            } catch {
+                              return '⚠ לא ניתן לפענח (מפתח הצפנה שגוי)'
+                            }
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+                { name: 'notes', type: 'textarea', label: 'הערות', admin: { rows: 2 } },
+              ],
             },
           ],
         },

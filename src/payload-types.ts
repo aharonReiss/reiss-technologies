@@ -2086,6 +2086,16 @@ export interface ClientProfile {
    * גלוי רק לך באדמין. הלקוח לא רואה את זה.
    */
   notes?: string | null;
+  credentials?:
+    | {
+        system: string;
+        url?: string | null;
+        username?: string | null;
+        password?: string | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   files?: {
     docs?: (number | ClientFile)[];
     hasNextPage?: boolean;
@@ -3589,6 +3599,16 @@ export interface ClientProfilesSelect<T extends boolean = true> {
   businessName?: T;
   projectName?: T;
   notes?: T;
+  credentials?:
+    | T
+    | {
+        system?: T;
+        url?: T;
+        username?: T;
+        password?: T;
+        notes?: T;
+        id?: T;
+      };
   files?: T;
   status?: T;
   lastActivityAt?: T;

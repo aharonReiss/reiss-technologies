@@ -22,3 +22,9 @@ export function QuestionRowLabel() {
     </span>
   )
 }
+
+/** The system's name in a client's access list. */
+export function CredentialRowLabel() {
+  const { data, rowNumber } = useRowLabel<{ system?: string }>()
+  return <span>{data?.system || `מערכת ${(rowNumber ?? 0) + 1}`}</span>
+}
