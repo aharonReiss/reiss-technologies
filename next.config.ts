@@ -26,6 +26,23 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(dirname),
   },
+  // The installable admin: its service worker lives in /admin-pwa but controls /admin,
+  // and is always fetched fresh so an update reaches the installed app.
+  async headers() {
+    return [
+      {
+        source: '/admin-pwa/sw.js',
+        headers: [
+          { key: 'Service-Worker-Allowed', value: '/admin' },
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
+      {
+        source: '/admin-pwa/manifest.webmanifest',
+        headers: [{ key: 'Content-Type', value: 'application/manifest+json' }],
+      },
+    ]
+  },
 }
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })

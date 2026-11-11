@@ -39,7 +39,17 @@ export default buildConfig({
   serverURL: getServerURL(),
   admin: {
     user: Users.slug,
-    meta: { titleSuffix: ' | REISS DIGITAL' },
+    // The admin installs as an app (Chrome / Edge "Install", iPhone "Add to Home Screen").
+    meta: {
+      titleSuffix: ' | REISS DIGITAL',
+      manifest: '/admin-pwa/manifest.webmanifest',
+      appleWebApp: { capable: true, title: 'REISS ניהול', statusBarStyle: 'black-translucent' },
+      icons: [
+        { rel: 'icon', type: 'image/svg+xml', url: '/icon.svg' },
+        { rel: 'apple-touch-icon', url: '/admin-pwa/apple-touch-icon.png' },
+      ],
+    },
+    components: { providers: ['@/components/admin/AdminPwa#AdminPwa'] },
     importMap: {
       baseDir: path.resolve(dirname),
     },

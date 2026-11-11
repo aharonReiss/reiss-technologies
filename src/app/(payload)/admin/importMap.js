@@ -35,6 +35,7 @@ import { OnboardingLink as OnboardingLink_fcd0528f4ffbf28e9ce9c657d697f6ad } fro
 import { OnboardingLinkCell as OnboardingLinkCell_fcd0528f4ffbf28e9ce9c657d697f6ad } from '@/components/admin/OnboardingLink'
 import { QuestionRowLabel as QuestionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8 } from '@/components/admin/QuestionnaireRowLabel'
 import { SectionRowLabel as SectionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8 } from '@/components/admin/QuestionnaireRowLabel'
+import { AdminPwa as AdminPwa_bdd0734122eccac23e124ced49570b4f } from '@/components/admin/AdminPwa'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -76,5 +77,6 @@ export const importMap = {
   "@/components/admin/OnboardingLink#OnboardingLinkCell": OnboardingLinkCell_fcd0528f4ffbf28e9ce9c657d697f6ad,
   "@/components/admin/QuestionnaireRowLabel#QuestionRowLabel": QuestionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8,
   "@/components/admin/QuestionnaireRowLabel#SectionRowLabel": SectionRowLabel_e42473cdc529bf8186c4ceabfdcd64e8,
+  "@/components/admin/AdminPwa#AdminPwa": AdminPwa_bdd0734122eccac23e124ced49570b4f,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
