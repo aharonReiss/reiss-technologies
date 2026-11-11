@@ -1,9 +1,10 @@
 'use client'
 
 import { usePathname, useSearchParams } from 'next/navigation'
-import React, { useActionState } from 'react'
+import React, { useActionState, useEffect } from 'react'
 
 import { Icon } from '@/components/Icon'
+import { track } from '@/utilities/track'
 import { type LeadFormState, submitLead } from './actions'
 
 type Props = {
@@ -22,6 +23,11 @@ export function ContactFormClient({ services, submitLabel, successMessage, dark 
   const [state, action, pending] = useActionState<LeadFormState, FormData>(submitLead, {
     status: 'idle',
   })
+
+  // A lead saved on the server is a lead: reported once, when the success appears.
+  useEffect(() => {
+    if (state.status === 'success') track('generate_lead', { form_type: 'contact_form' })
+  }, [state.status])
 
   if (state.status === 'success') {
     return (

@@ -39,7 +39,7 @@ function PersonalHero({
   }
 
   const testimonial =
-    floatingTestimonial && typeof floatingTestimonial === 'object' ? floatingTestimonial : null
+    floatingTestimonial && typeof floatingTestimonial === 'object' && !floatingTestimonial.placeholder ? floatingTestimonial : null
   // Bubbles float around the portrait; the testimonial is the fallback when none are set.
   const bubbleTexts = (bubbles ?? []).map((b) => b.text)
   if (bubbleTexts.length === 0 && testimonial) bubbleTexts.push(`״${testimonial.quote}״ (**${testimonial.name}**)`)
@@ -306,6 +306,17 @@ function CenteredHero({
                   {secondary.link.label} ←
                 </CMSLink>
               )}
+              {/* Any further links read as more of the same: quiet ways into the site. */}
+              {links?.slice(2).map(({ id, link }) => (
+                <CMSLink
+                  key={id}
+                  link={link}
+                  appearance="none"
+                  className="border-b-2 border-white/25 pb-1 font-display text-lg font-bold text-white/85 transition hover:border-brand hover:text-white md:order-1 md:text-xl"
+                >
+                  {link.label} ←
+                </CMSLink>
+              ))}
               <span
                 dir="ltr"
                 aria-hidden

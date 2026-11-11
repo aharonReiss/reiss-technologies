@@ -4,6 +4,7 @@ import React from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { LeadTracking } from '@/components/LeadTracking'
 import { RevealObserver } from '@/components/RevealObserver'
 import { ScrollProgress } from '@/components/ScrollProgress'
 import { SiteScripts } from '@/components/SiteScripts'
@@ -46,13 +47,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = { themeColor: '#0d1020' }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Which analytics the one ID field loads, so events go the right way (src/utilities/track.ts).
+  const id = (await getGlobal('site-settings', 0)).integrations?.ga4Id?.trim() ?? ''
+  const analytics = /^GTM-[A-Z0-9]+$/i.test(id) ? 'gtm' : /^G-[A-Z0-9]+$/i.test(id) ? 'ga' : undefined
+
   return (
     // suppressHydrationWarning: the inline script adds the "js" class before React hydrates.
     <html
       lang="he"
       dir="rtl"
       className={`${heebo.variable} ${rubik.variable} ${signature.variable}`}
+      data-analytics={analytics}
       suppressHydrationWarning
     >
       <head>
@@ -74,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RevealObserver />
         <ScrollProgress />
         <SiteScripts />
+        <LeadTracking />
       </body>
     </html>
   )

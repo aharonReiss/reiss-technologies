@@ -14,18 +14,21 @@ export async function TestimonialsBlock({
   background,
   anchor,
 }: TestimonialsBlockProps) {
-  let testimonials = (selected ?? []).filter((t): t is Testimonial => typeof t === 'object')
+  // Real testimonials only (temporary ones are never shown); none at all, no section.
+  let testimonials = (selected ?? []).filter((t): t is Testimonial => typeof t === 'object' && !t.placeholder)
 
-  if (testimonials.length === 0) {
+  if (!selected?.length) {
     const payload = await getPayloadClient()
     const res = await payload.find({
       collection: 'testimonials',
+      where: { placeholder: { not_equals: true } },
       sort: '_order',
       limit: 9,
       depth: 1,
     })
     testimonials = res.docs
   }
+  if (testimonials.length === 0) return null
 
   const dark = background === 'dark'
 

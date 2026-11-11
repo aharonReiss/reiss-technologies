@@ -22,7 +22,7 @@ export function WorkRailBlock({ heading, items, closingTitle, closingLink, ancho
         answer: p.answer?.trim() || null,
         // Only a testimonial actually linked to the project, in the client's own words.
         quote:
-          p.testimonial && typeof p.testimonial === 'object'
+          p.testimonial && typeof p.testimonial === 'object' && !(p.testimonial as Testimonial).placeholder
             ? { text: (p.testimonial as Testimonial).quote, by: (p.testimonial as Testimonial).name }
             : null,
         desktop: url(p.desktopScreenshot) ?? url(p.coverImage),

@@ -30,7 +30,8 @@ export const HeroBlock: Block = {
       admin: { description: 'כדי להדגיש מילים בצבע המותג, עטוף אותן בכוכביות: *אתרים שמוכרים*' },
     },
     { name: 'subheading', type: 'textarea', label: 'תת־כותרת' },
-    linkGroup(),
+    // Two buttons; on the home hero further links show as a row of quiet links.
+    linkGroup({ maxRows: 4 }),
     {
       name: 'image',
       type: 'upload',

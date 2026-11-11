@@ -34,6 +34,10 @@ type Args = {
  * cards in Hebrew, with the page image or the site's default share image.
  */
 export function buildMetadata({ settings, title, description, path, image, noIndex, type = 'website' }: Args): Metadata {
+  // The site-wide fallback repeats on every such page; Google treats them as duplicates.
+  if (!description && process.env.NODE_ENV !== 'production') {
+    console.warn(`[seo] ${path} has no description of its own (SEO tab in the admin)`)
+  }
   const desc = description || settings.seo?.defaultDescription || undefined
   const img = shareImage(image) ?? shareImage(settings.seo?.defaultImage)
   const images = img ? [img] : undefined

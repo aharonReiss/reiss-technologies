@@ -40,6 +40,7 @@ export function WhatsAppFloat({ href, children }: { href: string; children: Reac
   return (
     <a
       href={href}
+      data-track-location="floating_button"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="שיחה ב־WhatsApp"

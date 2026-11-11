@@ -24,19 +24,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ])
   const hasBlogPage = pages.docs.some((d) => d.slug === 'blog')
 
+  // An index page changes when what it lists changes: the latest project or article counts too.
+  const latest = (docs: { updatedAt: string }[]) => docs.reduce((m, d) => (d.updatedAt > m ? d.updatedAt : m), '')
+  const listed: Record<string, string> = {
+    [HOME_SLUG]: latest([...projects.docs, ...posts.docs]),
+    projects: latest(projects.docs),
+    blog: latest(posts.docs),
+  }
+  const newest = (...dates: (string | undefined)[]) => dates.filter(Boolean).sort().at(-1)
+
   return [
     ...pages.docs
       .filter((d) => d.slug)
       .map((d) => ({
         url: absoluteURL(docPath('pages', d.slug)),
-        lastModified: d.updatedAt,
+        lastModified: newest(d.updatedAt, listed[d.slug!]),
         priority: d.slug === HOME_SLUG ? 1 : 0.8,
       })),
     ...projects.docs
       .filter((d) => d.slug)
       .map((d) => ({ url: absoluteURL(docPath('projects', d.slug)), lastModified: d.updatedAt, priority: 0.7 })),
     // The built-in /blog index, while no CMS page named "blog" stands in for it.
-    ...(posts.docs.length && !hasBlogPage ? [{ url: absoluteURL('/blog'), priority: 0.6 }] : []),
+    ...(posts.docs.length && !hasBlogPage ? [{ url: absoluteURL('/blog'), lastModified: listed.blog || undefined, priority: 0.6 }] : []),
     ...posts.docs
       .filter((d) => d.slug)
       .map((d) => ({ url: absoluteURL(docPath('posts', d.slug)), lastModified: d.updatedAt, priority: 0.6 })),

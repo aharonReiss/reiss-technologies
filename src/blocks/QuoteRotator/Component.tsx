@@ -4,10 +4,13 @@ import type { Project, QuoteRotatorBlock as QuoteRotatorBlockProps, Testimonial 
 import { docPath } from '@/utilities/routes'
 import { QuoteRotator, type Quote } from './QuoteRotator'
 
-/** Maps the chosen testimonials to plain data; the client part only presents them. */
+/**
+ * Maps the chosen testimonials to plain data; the client part only presents them.
+ * Real testimonials only: with none, the whole section (label included) is left out.
+ */
 export function QuoteRotatorBlock({ label, testimonials, anchor }: QuoteRotatorBlockProps) {
   const items: Quote[] = (testimonials ?? [])
-    .filter((t): t is Testimonial => typeof t === 'object')
+    .filter((t): t is Testimonial => typeof t === 'object' && !t.placeholder)
     .map((t) => {
       const project = t.project && typeof t.project === 'object' ? (t.project as Project) : null
       return {

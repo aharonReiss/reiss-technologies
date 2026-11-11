@@ -33,8 +33,8 @@ export async function generateStaticParams() {
   return docs.filter((d) => d.slug).map((d) => ({ slug: d.slug! }))
 }
 
-/** The published project after this one in the admin order; null after the last. */
-async function nextProject(current: Project) {
+/** The published projects before and after this one in the admin order (null at either end). */
+async function neighbours(current: Project) {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: 'projects',
@@ -46,7 +46,7 @@ async function nextProject(current: Project) {
     overrideAccess: false,
   })
   const at = docs.findIndex((d) => d.id === current.id)
-  return at >= 0 ? (docs[at + 1] ?? null) : null
+  return { prev: at > 0 ? docs[at - 1] : null, next: at >= 0 ? (docs[at + 1] ?? null) : null }
 }
 
 /** A thin browser bar above a capture of the live site. */
@@ -72,7 +72,10 @@ export default async function ProjectPage({ params }: Args) {
   const project = await getDocBySlug('projects', decodeURIComponent(slug))
   if (!project) notFound()
 
-  const next = await nextProject(project)
+  const { prev, next } = await neighbours(project)
+  const results = (project.results ?? []).filter((r) => r.value && r.label)
+  // A real testimonial only; temporary ones are never shown on a case study.
+  const testimonial = project.testimonial && typeof project.testimonial === 'object' && !project.testimonial.placeholder ? project.testimonial : null
   const name = shortTitle(project.title)
   const services = (project.services ?? []).filter((s): s is Service => typeof s === 'object')
   const gallery = (project.gallery ?? []).filter(media)
@@ -143,7 +146,16 @@ export default async function ProjectPage({ params }: Args) {
               {services.length > 0 && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold tracking-[0.12em] text-white/45">מה עשינו</dt>
-                  <dd className="m-0 text-white/85">{services.map((s) => s.title).join(' · ')}</dd>
+                  <dd className="m-0 flex flex-wrap gap-x-1 text-white/85">
+                    {services.map((s, i) => (
+                      <React.Fragment key={s.id}>
+                        {i > 0 && <span aria-hidden>·</span>}
+                        <Link href={docPath('services', s.slug)} className="text-white/85 underline decoration-white/25 underline-offset-4 hover:text-brand hover:decoration-brand">
+                          {s.title.replace(/\.$/, '')}
+                        </Link>
+                      </React.Fragment>
+                    ))}
+                  </dd>
                 </div>
               )}
               {live && (
@@ -195,6 +207,34 @@ export default async function ProjectPage({ params }: Args) {
                   </div>
                 ),
             )}
+          </div>
+        </section>
+      )}
+
+      {/* B2 – the result: only numbers entered in the CMS, never made up */}
+      {results.length > 0 && (
+        <section aria-label="התוצאה" className="bg-muted text-ink">
+          <div className="container-site pb-20 md:pb-[14vh]">
+            <div data-reveal className="grid gap-5 border-t border-line pt-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16 md:pt-14">
+              <h2 className="m-0 font-display text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.95] font-extrabold tracking-[-0.03em] !text-ink">
+                התוצאה<span className="text-brand">.</span>
+              </h2>
+              <dl className="m-0 grid grid-cols-2 gap-x-8 gap-y-8">
+                {results.map((r, i) => (
+                  <div key={r.id ?? i}>
+                    <dt className="sr-only">{r.label}</dt>
+                    <dd className="m-0">
+                      <span className="block font-display text-[clamp(2.4rem,5vw,4rem)] leading-none font-black tracking-tight text-brand" dir="auto">
+                        {r.value}
+                      </span>
+                      <span aria-hidden className="mt-2 block text-base leading-snug text-body md:text-lg">
+                        {r.label}
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </section>
       )}
@@ -318,6 +358,23 @@ export default async function ProjectPage({ params }: Args) {
 
       <RenderBlocks blocks={project.layout} />
 
+      {/* The client's own words, when there is a real testimonial for this project */}
+      {testimonial && (
+        <section aria-label="מה הלקוח אומר" className="bg-muted text-ink">
+          <figure data-reveal className="container-site m-0 py-20 md:py-[14vh]">
+            <blockquote className="m-0 max-w-[30ch] font-display text-[clamp(1.6rem,3.4vw,2.9rem)] leading-[1.25] font-bold tracking-tight text-ink">
+              <span aria-hidden className="text-brand">״</span>
+              {testimonial.quote}
+              <span aria-hidden className="text-brand">״</span>
+            </blockquote>
+            <figcaption className="mt-6 text-base text-body md:text-lg">
+              <span className="font-semibold text-ink">{testimonial.name}</span>
+              {(testimonial.role || testimonial.company) && <span>, {[testimonial.role, testimonial.company].filter(Boolean).join(', ')}</span>}
+            </figcaption>
+          </figure>
+        </section>
+      )}
+
       {/* F – closing: the live site, the conversation, the next project */}
       <footer className="section-dark bg-ink text-white/70">
         <div className="container-site py-20 md:py-[16vh]">
@@ -371,6 +428,21 @@ export default async function ProjectPage({ params }: Args) {
                 {next ? shortTitle(next.title) : 'לכל הפרויקטים'} ←
               </span>
             </Link>
+            {/* The way back: the previous project, small, and the whole portfolio. */}
+            <div className="mt-10 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 text-base">
+              {prev ? (
+                <Link href={docPath('projects', prev.slug)} className="text-white/70 no-underline hover:text-brand">
+                  → הפרויקט הקודם: <span className="font-semibold text-white">{shortTitle(prev.title)}</span>
+                </Link>
+              ) : (
+                <span />
+              )}
+              {next && (
+                <Link href={docPath('pages', 'projects')} className="text-white/70 no-underline hover:text-brand">
+                  לכל הפרויקטים ←
+                </Link>
+              )}
+            </div>
           </nav>
         </div>
       </footer>

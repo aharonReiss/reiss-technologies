@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react'
 
 import { Icon } from '@/components/Icon'
 import { cn } from '@/utilities/cn'
+import { track } from '@/utilities/track'
 
 type Props = {
   /** Digits only, international format; null when Site Settings has none. */
@@ -93,6 +94,8 @@ export function WhatsAppForm({ number, projectTypes, greeting, signoff, directMe
     }
     if (!number) return
     const url = waUrl(number, message())
+    // The lead: the form is filled and WhatsApp opens with the message (sending is the visitor's last tap).
+    track('generate_lead', { form_type: 'whatsapp_form', project_type: v.type || undefined })
     setOpened(url)
     setCopied(false)
     // A new tab where allowed; where popups are blocked (some phones), the same tab.
@@ -224,7 +227,7 @@ export function WhatsAppForm({ number, projectTypes, greeting, signoff, directMe
           <div role="status" className="border-s-2 border-brand ps-4 text-[0.95rem] leading-relaxed text-ink">
             <p className="m-0">פתחנו את וואטסאפ עם ההודעה מוכנה. כדי שנקבל אותה, צריך ללחוץ שם על שליחה.</p>
             <p className="m-0 mt-2 flex flex-wrap gap-x-5 gap-y-1">
-              <a href={opened} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline underline-offset-4">
+              <a href={opened} data-track="off" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline underline-offset-4">
                 לא נפתח? נסו שוב
               </a>
               <button type="button" onClick={copy} className="font-semibold text-brand underline underline-offset-4">

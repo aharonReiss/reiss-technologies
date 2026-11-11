@@ -34,7 +34,26 @@ export default async function PostPage({ params }: Args) {
   if (!post) notFound()
 
   const categories = (post.categories ?? []).filter((c): c is Category => typeof c === 'object')
-  const related = (post.relatedPosts ?? []).filter((p): p is Post => typeof p === 'object' && p._status !== 'draft')
+  const chosen = (post.relatedPosts ?? []).filter((p): p is Post => typeof p === 'object' && p._status !== 'draft')
+  const payload = await getPayloadClient()
+  // Articles picked in the admin first, topped up with the latest ones, so every article links on.
+  const { docs: latest } = await payload.find({
+    collection: 'posts',
+    where: { id: { not_in: [post.id, ...chosen.map((p) => p.id)] } },
+    sort: '-publishedAt',
+    limit: Math.max(0, 3 - chosen.length),
+    depth: 1,
+    overrideAccess: false,
+  })
+  const related = [...chosen, ...latest].slice(0, 3)
+  const { docs: services } = await payload.find({
+    collection: 'services',
+    sort: '_order',
+    limit: 6,
+    depth: 0,
+    overrideAccess: false,
+    select: { title: true, slug: true, excerpt: true },
+  })
   const url = absoluteURL(docPath('posts', post.slug))
 
   const structured = [
@@ -111,6 +130,33 @@ export default async function PostPage({ params }: Args) {
       <div className="container-site py-12 md:py-20">
         <RichText data={post.content} className="mx-auto max-w-[760px] text-lg leading-[1.85] text-body" />
       </div>
+
+      {services.length > 0 && (
+        <nav aria-label="השירותים שלנו" className="container-site pb-16 md:pb-20">
+          <div className="mx-auto max-w-[760px] rounded-card border border-line bg-white p-6 md:p-8">
+            <h2 className="m-0 font-display text-xl font-extrabold tracking-tight !text-ink md:text-2xl">
+              איך אנחנו יכולים לעזור<span className="text-brand">?</span>
+            </h2>
+            <ul className="mt-5 mb-0 grid list-none gap-0 divide-y divide-line p-0">
+              {services.map((s) => (
+                <li key={s.id}>
+                  <Link href={docPath('services', s.slug)} className="group flex items-baseline justify-between gap-4 py-3.5 no-underline">
+                    <span>
+                      <span className="block font-display text-lg font-bold text-ink transition-colors group-hover:text-brand">
+                        {s.title.replace(/\.$/, '')}
+                      </span>
+                      {s.excerpt && <span className="mt-0.5 block text-[15px] leading-relaxed text-body">{s.excerpt}</span>}
+                    </span>
+                    <span aria-hidden className="shrink-0 text-brand">
+                      ←
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+      )}
 
       {related.length > 0 && (
         <section aria-label="מאמרים קשורים" className="container-site border-t border-line py-16 md:py-20">
