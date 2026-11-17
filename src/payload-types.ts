@@ -80,6 +80,7 @@ export interface Config {
     users: User;
     'client-profiles': ClientProfile;
     'client-files': ClientFile;
+    'short-links': ShortLink;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -106,6 +107,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     'client-profiles': ClientProfilesSelect<false> | ClientProfilesSelect<true>;
     'client-files': ClientFilesSelect<false> | ClientFilesSelect<true>;
+    'short-links': ShortLinksSelect<false> | ShortLinksSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -2168,6 +2170,28 @@ export interface ClientFile {
   };
 }
 /**
+ * כתובת קצרה באתר שמעבירה מיד ליעד, למשל reiss-dgtl.com/ig. שינוי יעד נכנס לתוקף מיד.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-links".
+ */
+export interface ShortLink {
+  id: number;
+  /**
+   * אותיות באנגלית קטנות, ספרות ומקפים. למשל ig יוצר את reiss-dgtl.com/ig
+   */
+  slug: string;
+  /**
+   * כתובת מלאה (https://…) או נתיב באתר שמתחיל ב-/ , למשל /?utm_source=instagram
+   */
+  destination: string;
+  active?: boolean | null;
+  note?: string | null;
+  clicks?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -2366,6 +2390,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'client-files';
         value: number | ClientFile;
+      } | null)
+    | ({
+        relationTo: 'short-links';
+        value: number | ShortLink;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -3656,6 +3684,19 @@ export interface ClientFilesSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-links_select".
+ */
+export interface ShortLinksSelect<T extends boolean = true> {
+  slug?: T;
+  destination?: T;
+  active?: T;
+  note?: T;
+  clicks?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

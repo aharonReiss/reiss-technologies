@@ -1,6 +1,7 @@
 import * as migration_20261107_173540_baseline from './20261107_173540_baseline';
 import * as migration_20261107_174235_client_onboarding from './20261107_174235_client_onboarding';
 import * as migration_20261107_181811_client_credentials from './20261107_181811_client_credentials';
+import * as migration_20261117_063740_short_links from './20261117_063740_short_links';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20261107_181811_client_credentials.up,
     down: migration_20261107_181811_client_credentials.down,
-    name: '20261107_181811_client_credentials'
+    name: '20261107_181811_client_credentials',
+  },
+  {
+    up: migration_20261117_063740_short_links.up,
+    down: migration_20261117_063740_short_links.down,
+    name: '20261117_063740_short_links'
   },
 ];

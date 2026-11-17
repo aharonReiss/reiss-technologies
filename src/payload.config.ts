@@ -20,6 +20,7 @@ import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Projects } from './collections/Projects'
 import { Services } from './collections/Services'
+import { ShortLinks } from './collections/ShortLinks'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
 import { richTextEditor } from './fields/richText'
@@ -92,6 +93,7 @@ export default buildConfig({
     Users,
     ClientProfiles,
     ClientFiles,
+    ShortLinks,
   ],
   globals: [Header, Footer, SiteSettings, Questionnaire],
   editor: richTextEditor,
